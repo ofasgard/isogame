@@ -1,0 +1,69 @@
+use godot::builtin::Vector2;
+use godot::classes::Input;
+
+pub enum KeyboardInput {
+	MoveNW,
+	MoveNE,
+	MoveSW,
+	MoveSE
+}
+
+impl KeyboardInput {
+	pub fn get_key() -> Option<Self> {
+		let input = Input::singleton();
+		if input.is_action_pressed("move_nw") { return Some(KeyboardInput::MoveNW); }
+		if input.is_action_pressed("move_ne") { return Some(KeyboardInput::MoveNE); }
+		if input.is_action_pressed("move_sw") { return Some(KeyboardInput::MoveSW); }
+		if input.is_action_pressed("move_se") { return Some(KeyboardInput::MoveSE); }
+		None		
+	}
+	
+	pub fn get_movement() -> Option<IsometricFacing> {
+		match KeyboardInput::get_key() {
+			Some(input) => match input {
+				KeyboardInput::MoveNW => Some(IsometricFacing::NW),
+				KeyboardInput::MoveNE => Some(IsometricFacing::NE),
+				KeyboardInput::MoveSW => Some(IsometricFacing::SW),
+				KeyboardInput::MoveSE => Some(IsometricFacing::SE),
+			},
+			None => None		
+		}
+	}
+}
+
+pub enum IsometricFacing {
+	NW,
+	NE,
+	SW,
+	SE
+}
+
+
+impl IsometricFacing {
+	pub fn to_string(&self) -> String {
+		match self {
+			IsometricFacing::NW => "nw".to_string(),
+			IsometricFacing::NE => "ne".to_string(),
+			IsometricFacing::SW => "sw".to_string(),
+			IsometricFacing::SE => "se".to_string()
+		}		
+	}
+
+	pub fn get_idle_animation(&self) -> String { format!("{}_idle", self.to_string()) }
+	pub fn get_walk_animation(&self) -> String { format!("{}_walk", self.to_string()) }
+
+	pub fn get_movement_vector(&self, tile_width: f32) -> Vector2 {
+		// A directional movement vector with a magnitude of 1 tile.
+		let vector = match self {
+			// Isometric tiles are twice as wide as they are tall.
+			// So movement is halved in the Y axis.
+			IsometricFacing::NW => Vector2::new(-1.0, -0.5),
+			IsometricFacing::NE => Vector2::new(1.0, -0.5),
+			IsometricFacing::SW => Vector2::new(-1.0, 0.5),
+			IsometricFacing::SE => Vector2::new(1.0, 0.5)
+		};
+		// Divide tile width by 2 because it's a vector.
+		// We only want to move half a tile in the X axis, and half a tile in the Y axis.
+		vector * (tile_width / 2.0)		
+	}
+}
