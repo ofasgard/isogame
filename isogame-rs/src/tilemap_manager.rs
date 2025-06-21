@@ -58,18 +58,23 @@ impl TileMapManager {
 		let mut tree = self.base().get_tree().unwrap();
 		let entities = tree.get_nodes_in_group("entities");
 		
-		// TODO TODO TODO TEMPORARY ONLY - UNSAFE CAST TO PLAYER!!! TODO TODO TODO
 		for node in entities.iter_shared() {
-			let player : Gd<Player> = node.cast();
-			let reserve = player.signals().reserve_tile();
-			let unreserve = player.signals().unreserve_tile();
-			
-			reserve.connect_other(self, Self::on_reserve_tile);
-			unreserve.connect_other(self, Self::on_unreserve_tile);
+			match node.get_class().to_string().as_str() {
+				"Player" => self.register_player_signals(node),
+				_ => ()
+			};
 		}
 	}
 	
-	fn on_reserve_tile(&mut self, mut instance: Gd<Player>) {
+	fn register_player_signals(&mut self, node: Gd<Node>) {
+		let player : Gd<Player> = node.cast();
+		let reserve = player.signals().reserve_tile();
+		let unreserve = player.signals().unreserve_tile();
+		reserve.connect_other(self, Self::on_reserve_player);
+		unreserve.connect_other(self, Self::on_unreserve_player);
+	}
+	
+	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
 		let mut player = instance.bind_mut();
 		let coords = player.calculate_destination();
 	
@@ -86,7 +91,7 @@ impl TileMapManager {
 		player.start_moving();
 	}
 	
-	fn on_unreserve_tile(&mut self, coords: Vector2) {
+	fn on_unreserve_player(&mut self, coords: Vector2) {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		let local_pos = tilemap.to_local(coords);
 		let grid_pos = tilemap.local_to_map(local_pos);
