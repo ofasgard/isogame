@@ -19,6 +19,14 @@ pub struct Player {
 }
 
 #[godot_api]
+impl Player {
+	#[signal]
+	pub fn reserve_tile(instance: Gd<Player>);
+	#[signal]
+	pub fn unreserve_tile(coords: Vector2);
+}
+
+#[godot_api]
 impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
@@ -49,7 +57,7 @@ impl ICharacterBody2D for Player {
 			// If we are not moving, check if a movement key is currently pressed.
 			self.facing = facing;
 			sprite.set_animation(&self.facing.get_walk_animation());
-			self.start_moving();
+			self.try_moving();
 		} else {
 			// Otherwise, play the idle animation.
 			sprite.set_animation(&self.facing.get_idle_animation());
@@ -58,20 +66,23 @@ impl ICharacterBody2D for Player {
 }
 
 impl Player {
-	fn is_moving(&self) -> bool {
+	pub fn is_moving(&self) -> bool {
 		match &self.destination {
 			Some(_) => true,
 			None => false
 		}
 	}
 	
-	fn start_moving(&mut self) {
-		// Calculate destination.
+	pub fn calculate_destination(&self) -> Vector2 {
 		let position = self.base().get_position();
 		let movement_vector =  self.facing.get_movement_vector(32.0);
 		let destination = position + movement_vector;
-		
+		destination
+	}
+	
+	pub fn try_moving(&mut self) {
 		// Determine whether the tile is occupied by something with collision.
+		let movement_vector =  self.facing.get_movement_vector(32.0);
 		let mut raycast : Gd<RayCast2D> = self.base().get_node_as("RayCast2D");
 		raycast.set_target_position(movement_vector);
 		raycast.force_raycast_update();
@@ -80,11 +91,18 @@ impl Player {
 			return;
 		}
 		
-		// Set destination.
-		self.destination = Some(destination);		
+		// Ask nicely if we're allowed to move.
+		let gd = self.to_gd();
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(&gd);
 	}
 	
-	fn keep_moving(&mut self, delta: f64) {
+	pub fn start_moving(&mut self) {
+		let destination = self.calculate_destination();
+		self.destination = Some(destination);	
+	}
+	
+	pub fn keep_moving(&mut self, delta: f64) {
 		if let Some(destination) = self.destination {
 			// Update our position.
 			let mut position = self.base().get_position();
@@ -94,6 +112,10 @@ impl Player {
 			// Check if we have reached our destination.
 			if position.distance_to(destination) < 1.0 {
 				position = destination;
+				
+				let mut sig = self.signals().unreserve_tile();
+				sig.emit(destination.clone());
+				
 				self.destination = None;
 			}
 			

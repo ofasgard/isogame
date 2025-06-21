@@ -3,10 +3,13 @@ use godot::classes::Node2D;
 use godot::classes::INode2D;
 use godot::classes::TileMapLayer;
 
+use crate::player::Player;
+
 #[derive(GodotClass)]
 #[class(base=Node2D)]
 struct TileMapManager {
 	tilemap: Option<Gd<TileMapLayer>>,
+	reserved_tiles: Vec<Vector2i>,
 	base: Base<Node2D>
 }
 
@@ -15,6 +18,7 @@ impl INode2D for TileMapManager {
 	fn init(base: Base<Node2D>) -> Self {
 		Self {
 			tilemap: None,
+			reserved_tiles: Vec::new(),
 			base
 		}
 	}
@@ -24,6 +28,7 @@ impl INode2D for TileMapManager {
 		self.tilemap = Some(tilemap);
 		
 		self.lock_entities();
+		self.register_tile_signals(); // TODO this is only done once at startup - what if more entities appear???
 	}
 }
 
@@ -49,21 +54,46 @@ impl TileMapManager {
 		}
 	}
 	
-	fn get_occupied_tiles(&self) -> Vec<Vector2i> {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
+	fn register_tile_signals(&mut self) {
 		let mut tree = self.base().get_tree().unwrap();
 		let entities = tree.get_nodes_in_group("entities");
 		
-		let mut occupied_tiles : Vec<Vector2i> = Vec::new();
+		// TODO TODO TODO TEMPORARY ONLY - UNSAFE CAST TO PLAYER!!! TODO TODO TODO
 		for node in entities.iter_shared() {
-			// Convert the entity's global coordinates to grid coordinates.
-			let node2d : Gd<Node2D> = node.cast();
-			let pos = node2d.get_position();
-			let local_pos = tilemap.to_local(pos);
-			let grid_pos = tilemap.local_to_map(local_pos);
-			occupied_tiles.push(grid_pos);
+			let player : Gd<Player> = node.cast();
+			let reserve = player.signals().reserve_tile();
+			let unreserve = player.signals().unreserve_tile();
+			
+			reserve.connect_other(self, Self::on_reserve_tile);
+			unreserve.connect_other(self, Self::on_unreserve_tile);
 		}
-		occupied_tiles
+	}
+	
+	fn on_reserve_tile(&mut self, mut instance: Gd<Player>) {
+		let mut player = instance.bind_mut();
+		let coords = player.calculate_destination();
+	
+		// Check if the tile is currently occupied.
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let local_pos = tilemap.to_local(coords);
+		let grid_pos = tilemap.local_to_map(local_pos);
+		
+		if self.reserved_tiles.contains(&grid_pos) {
+			return;
+		}
+		
+		self.reserved_tiles.push(grid_pos);
+		player.start_moving();
+	}
+	
+	fn on_unreserve_tile(&mut self, coords: Vector2) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let local_pos = tilemap.to_local(coords);
+		let grid_pos = tilemap.local_to_map(local_pos);
+		
+		self.reserved_tiles.retain(|i| {
+			if *i == grid_pos { return false; }
+			true
+		});
 	}
 }
