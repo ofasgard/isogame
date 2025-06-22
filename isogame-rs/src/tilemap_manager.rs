@@ -3,6 +3,7 @@ use godot::classes::Node2D;
 use godot::classes::INode2D;
 use godot::classes::TileMapLayer;
 
+use crate::character::Character;
 use crate::player::Player;
 
 #[derive(GodotClass)]

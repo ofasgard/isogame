@@ -5,6 +5,7 @@ use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
 use godot::classes::RayCast2D;
 
+use crate::character::Character;
 use crate::util::KeyboardInput;
 use crate::util::IsometricFacing;
 
@@ -65,62 +66,24 @@ impl ICharacterBody2D for Player {
 	}
 }
 
-impl Player {
-	pub fn is_moving(&self) -> bool {
-		match &self.destination {
-			Some(_) => true,
-			None => false
-		}
-	}
+impl Character for Player {
+	fn get_destination(&self) -> Option<Vector2> { self.destination.clone() }
+	fn get_position(&self) -> Vector2 { self.base().get_position() }
+	fn get_facing(&self) -> IsometricFacing { self.facing.clone() }
+	fn get_raycast(&self) -> Gd<RayCast2D> { self.base().get_node_as("RayCast2D") }
+	fn get_speed(&self) -> f32 { self.speed }
 	
-	pub fn calculate_destination(&self) -> Vector2 {
-		let position = self.base().get_position();
-		let movement_vector =  self.facing.get_movement_vector(32.0);
-		let destination = position + movement_vector;
-		destination
-	}
+	fn set_destination(&mut self, destination: Option<Vector2>) { self.destination = destination; }
+	fn set_position(&mut self, position: Vector2) { self.base_mut().set_position(position);	}
 	
-	pub fn try_moving(&mut self) {
-		// Determine whether the tile is occupied by something with collision.
-		let movement_vector =  self.facing.get_movement_vector(32.0);
-		let mut raycast : Gd<RayCast2D> = self.base().get_node_as("RayCast2D");
-		raycast.set_target_position(movement_vector);
-		raycast.force_raycast_update();
-		
-		if raycast.is_colliding() {
-			return;
-		}
-		
-		// Ask nicely if we're allowed to move.
+	fn emit_reserve_signal(&mut self) {
 		let gd = self.to_gd();
 		let mut sig = self.signals().reserve_tile();
 		sig.emit(&gd);
 	}
 	
-	pub fn start_moving(&mut self) {
-		let destination = self.calculate_destination();
-		self.destination = Some(destination);	
-	}
-	
-	pub fn keep_moving(&mut self, delta: f64) {
-		if let Some(destination) = self.destination {
-			// Update our position.
-			let mut position = self.base().get_position();
-			let velocity = self.facing.get_movement_vector(32.0) * self.speed * (delta as f32);
-			position += velocity;
-			
-			// Check if we have reached our destination.
-			if position.distance_to(destination) < 1.0 {
-				position = destination;
-				
-				let mut sig = self.signals().unreserve_tile();
-				sig.emit(destination.clone());
-				
-				self.destination = None;
-			}
-			
-			// Move.
-			self.base_mut().set_position(position);
-		}
+	fn emit_unreserve_signal(&mut self, coords: Vector2) {
+		let mut sig = self.signals().unreserve_tile();
+		sig.emit(coords);
 	}
 }

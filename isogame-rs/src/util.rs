@@ -31,6 +31,7 @@ impl KeyboardInput {
 	}
 }
 
+#[derive(Clone)]
 pub enum IsometricFacing {
 	NW,
 	NE,
