@@ -94,4 +94,4 @@ tile_map_data = PackedByteArray("AAACABUABAACAAAAAAACABYABAACAAAAAAABABcABAACAAA
 tile_set = SubResource("TileSet_2c62f")
 
 [node name="Wolf" parent="." instance=ExtResource("6_hq1ik")]
-position = Vector2(208, 231)
+position = Vector2(208, 227)

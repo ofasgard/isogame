@@ -3,6 +3,7 @@ use godot::builtin::Vector2;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
+use godot::classes::RayCast2D;
 
 use crate::character::Character;
 use crate::util::IsometricFacing;
@@ -43,5 +44,33 @@ impl ICharacterBody2D for Wolf {
 		
 		// Add to the entities group.
 		self.base_mut().add_to_group("entities");
+	}
+	
+	fn physics_process(&mut self, delta: f64) {
+		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+		
+		// TODO
+	}
+}
+
+impl Character for Wolf {
+	fn get_destination(&self) -> Option<Vector2> { self.destination.clone() }
+	fn get_position(&self) -> Vector2 { self.base().get_position() }
+	fn get_facing(&self) -> IsometricFacing { self.facing.clone() }
+	fn get_raycast(&self) -> Gd<RayCast2D> { self.base().get_node_as("RayCast2D") }
+	fn get_speed(&self) -> f32 { self.speed }
+	
+	fn set_destination(&mut self, destination: Option<Vector2>) { self.destination = destination; }
+	fn set_position(&mut self, position: Vector2) { self.base_mut().set_position(position);	}
+	
+	fn emit_reserve_signal(&mut self) {
+		let gd = self.to_gd();
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(&gd);
+	}
+	
+	fn emit_unreserve_signal(&mut self, coords: Vector2) {
+		let mut sig = self.signals().unreserve_tile();
+		sig.emit(coords);
 	}
 }

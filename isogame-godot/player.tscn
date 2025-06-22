@@ -1037,9 +1037,9 @@ y_sort_enabled = true
 motion_mode = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -13)
 sprite_frames = SubResource("SpriteFrames_sh265")
 animation = &"nw_idle"
+offset = Vector2(0, -13)
 
 [node name="RayCast2D" type="RayCast2D" parent="."]
 
