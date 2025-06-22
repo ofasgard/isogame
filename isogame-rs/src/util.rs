@@ -1,6 +1,7 @@
 use godot::builtin::Vector2;
 use godot::classes::Input;
 
+/// Tracks the different keyboard inputs registered with the game.
 pub enum KeyboardInput {
 	MoveNW,
 	MoveNE,
@@ -9,6 +10,7 @@ pub enum KeyboardInput {
 }
 
 impl KeyboardInput {
+	/// Get keypress from the input singleton.
 	pub fn get_key() -> Option<Self> {
 		let input = Input::singleton();
 		if input.is_action_pressed("move_nw") { return Some(KeyboardInput::MoveNW); }
@@ -18,6 +20,7 @@ impl KeyboardInput {
 		None		
 	}
 	
+	/// Get keypress and convert it into an `IsometricFacing` type, if applicable.
 	pub fn get_movement() -> Option<IsometricFacing> {
 		match KeyboardInput::get_key() {
 			Some(input) => match input {
@@ -31,6 +34,7 @@ impl KeyboardInput {
 	}
 }
 
+/// Represents one of the four cardinal directions in an isometric grid.
 #[derive(Clone)]
 pub enum IsometricFacing {
 	NW,
@@ -53,8 +57,8 @@ impl IsometricFacing {
 	pub fn get_idle_animation(&self) -> String { format!("{}_idle", self.to_string()) }
 	pub fn get_walk_animation(&self) -> String { format!("{}_walk", self.to_string()) }
 
+	/// Get a directional movement vector with a magnitude of 1 isometric tile.
 	pub fn get_movement_vector(&self, tile_width: f32) -> Vector2 {
-		// A directional movement vector with a magnitude of 1 tile.
 		let vector = match self {
 			// Isometric tiles are twice as wide as they are tall.
 			// So movement is halved in the Y axis.

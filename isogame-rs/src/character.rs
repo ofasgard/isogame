@@ -15,6 +15,7 @@ pub trait Character {
 	fn emit_reserve_signal(&mut self);
 	fn emit_unreserve_signal(&mut self, coords: Vector2);
 
+	/// Check whether the character is currently moving, i.e. whether they have a destination.
 	fn is_moving(&self) -> bool {
 		match self.get_destination() {
 			Some(_) => true,
@@ -22,6 +23,7 @@ pub trait Character {
 		}
 	}
 	
+	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
 	fn calculate_destination(&self) -> Vector2 {
 		let position = self.get_position();
 		let movement_vector =  self.get_facing().get_movement_vector(32.0);
@@ -29,6 +31,7 @@ pub trait Character {
 		destination
 	}
 	
+	/// Check for collision in the direction you're currently facing. Then, send a movement request to the TileMapManager by emitting the `reserve_tile` signal.
 	fn try_moving(&mut self) {
 		// Determine whether the tile is occupied by something with collision.
 		let movement_vector =  self.get_facing().get_movement_vector(32.0);
@@ -44,11 +47,13 @@ pub trait Character {
 		self.emit_reserve_signal();
 	}
 	
+	/// Set our destination, which also marks us as "moving".
 	fn start_moving(&mut self) {
 		let destination = self.calculate_destination();
 		self.set_destination(Some(destination));	
 	}
 	
+	/// Continue moving towards our current destination.
 	fn keep_moving(&mut self, delta: f64) {
 		if let Some(destination) = self.get_destination() {
 			// Update our position.

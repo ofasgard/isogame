@@ -6,6 +6,7 @@ use godot::classes::TileMapLayer;
 use crate::character::Character;
 use crate::player::Player;
 
+/// Responsible for managing the isometric tilemap and the entities within it.
 #[derive(GodotClass)]
 #[class(base=Node2D)]
 struct TileMapManager {
@@ -25,9 +26,11 @@ impl INode2D for TileMapManager {
 	}
 	
 	fn ready(&mut self) {
+		// Store a pointer to the tilemap.
 		let tilemap : Gd<TileMapLayer> = self.base().get_node_as("TerrainLayer");
 		self.tilemap = Some(tilemap);
 		
+		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
 		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
 		
@@ -39,6 +42,7 @@ impl INode2D for TileMapManager {
 }
 
 impl TileMapManager {
+	/// Locks an entity's global position to the isometric grid of the tilemap.
 	fn lock_entity(&self, node: &Gd<Node>) {
 		let tilemap = self.tilemap.as_ref().unwrap();
 	
@@ -54,6 +58,7 @@ impl TileMapManager {
 		node2d.set_position(new_pos);
 	}
 	
+	/// Registers signal handlers for the `on_reserve` and `on_unreserve` signals.
 	fn register_tile_signal(&mut self, node: &Gd<Node>) {
 		match node.get_class().to_string().as_str() {
 			"Player" => self.register_player_signals(node.clone()),
@@ -69,6 +74,8 @@ impl TileMapManager {
 		unreserve.connect_other(self, Self::on_unreserve_player);
 	}
 	
+	/// When the `reserve_tile` signal is received, check whether the player is allowed to move.
+	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
 	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
 		let mut player = instance.bind_mut();
 		let coords = player.calculate_destination();
@@ -86,6 +93,7 @@ impl TileMapManager {
 		player.start_moving();
 	}
 	
+	/// When the `unreserve_tile` signal is received, remove all matching tiles from the internal `reserved_tiles` vector.
 	fn on_unreserve_player(&mut self, coords: Vector2) {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		let local_pos = tilemap.to_local(coords);
