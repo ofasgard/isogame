@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bw143apto6v50"]
 
-[ext_resource type="Texture2D" uid="uid://dy8kf6w2ap1pe" path="res://tavern/individual-medium-props/tavern-medium-props (9).png" id="1_n8un1"]
+[ext_resource type="Texture2D" uid="uid://hrt54ce5dwpu" path="res://tavern-props/tavern-medium-props (9).png" id="1_n8un1"]
 
 [sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_n8un1"]
 points = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
