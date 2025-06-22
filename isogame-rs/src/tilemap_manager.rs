@@ -27,43 +27,37 @@ impl INode2D for TileMapManager {
 		let tilemap : Gd<TileMapLayer> = self.base().get_node_as("TerrainLayer");
 		self.tilemap = Some(tilemap);
 		
-		self.lock_entities();
-		self.register_tile_signals(); // TODO this is only done once at startup - what if more entities appear???
+		let mut tree = self.base().get_tree().unwrap();
+		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
+		
+		for node in entities.iter_shared() {
+			self.lock_entity(&node);
+			self.register_tile_signal(&node);
+		}
 	}
 }
 
 impl TileMapManager {
-	fn lock_entities(&self) {
+	fn lock_entity(&self, node: &Gd<Node>) {
 		let tilemap = self.tilemap.as_ref().unwrap();
 	
-		let mut tree = self.base().get_tree().unwrap();
-		let entities = tree.get_nodes_in_group("entities");
+		// First, convert the entity's global coordinates to grid coordinates.
+		let mut node2d : Gd<Node2D> = node.clone().cast();
+		let pos = node2d.get_position();
+		let local_pos = tilemap.to_local(pos);
+		let grid_pos = tilemap.local_to_map(local_pos);
 		
-		// Lock all entities to the isometric grid.
-		for node in entities.iter_shared() {
-			// First, convert the entity's global coordinates to grid coordinates.
-			let mut node2d : Gd<Node2D> = node.cast();
-			let pos = node2d.get_position();
-			let local_pos = tilemap.to_local(pos);
-			let grid_pos = tilemap.local_to_map(local_pos);
-			
-			// Then convert them back into global coordinates.
-			let mut new_pos = tilemap.map_to_local(grid_pos);
-			new_pos = tilemap.to_global(new_pos);
-			node2d.set_position(new_pos);
-		}
+		// Then convert them back into global coordinates.
+		let mut new_pos = tilemap.map_to_local(grid_pos);
+		new_pos = tilemap.to_global(new_pos);
+		node2d.set_position(new_pos);
 	}
 	
-	fn register_tile_signals(&mut self) {
-		let mut tree = self.base().get_tree().unwrap();
-		let entities = tree.get_nodes_in_group("entities");
-		
-		for node in entities.iter_shared() {
-			match node.get_class().to_string().as_str() {
-				"Player" => self.register_player_signals(node),
-				_ => ()
-			};
-		}
+	fn register_tile_signal(&mut self, node: &Gd<Node>) {
+		match node.get_class().to_string().as_str() {
+			"Player" => self.register_player_signals(node.clone()),
+			_ => ()
+		};
 	}
 	
 	fn register_player_signals(&mut self, node: Gd<Node>) {
