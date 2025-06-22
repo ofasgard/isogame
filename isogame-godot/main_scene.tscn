@@ -1,11 +1,10 @@
-[gd_scene load_steps=13 format=4 uid="uid://d272qjg344h42"]
+[gd_scene load_steps=11 format=4 uid="uid://d272qjg344h42"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_0f027"]
 [ext_resource type="PackedScene" uid="uid://d2qpmlidd3tnc" path="res://player.tscn" id="2_2c62f"]
+[ext_resource type="Texture2D" uid="uid://b15m0ktxit6rt" path="res://tavern-tiles/black.png" id="2_nfk4m"]
 [ext_resource type="PackedScene" uid="uid://bw143apto6v50" path="res://barrel.tscn" id="3_d5x1h"]
-[ext_resource type="Texture2D" uid="uid://blcft47hac4k6" path="res://tavern-walls/tavern-walls (22).png" id="4_8mm7a"]
-[ext_resource type="Texture2D" uid="uid://c4e7c3tous71i" path="res://tavern-walls/tavern-walls (21).png" id="4_d5x1h"]
-[ext_resource type="Texture2D" uid="uid://ctnjqci1liv3g" path="res://tavern-walls/tavern-walls (55).png" id="6_hq1ik"]
+[ext_resource type="Texture2D" uid="uid://bqm7ifkr3cmod" path="res://tavern-walls/tavern-walls.png" id="4_8mm7a"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2c62f"]
 texture = ExtResource("1_0f027")
@@ -40,32 +39,30 @@ texture_region_size = Vector2i(64, 16)
 0:0/0/texture_origin = Vector2i(9, 19)
 0:0/0/y_sort_origin = -10
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8mm7a"]
-texture = ExtResource("4_d5x1h")
-texture_region_size = Vector2i(64, 16)
-0:0/size_in_atlas = Vector2i(1, 4)
-0:0/0 = 0
-0:0/0/texture_origin = Vector2i(9, 19)
-0:0/0/y_sort_origin = -10
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
+1:0/size_in_atlas = Vector2i(1, 4)
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(9, 19)
+1:0/0/y_sort_origin = -10
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
+2:0/size_in_atlas = Vector2i(1, 4)
+2:0/0 = 0
+2:0/0/texture_origin = Vector2i(-1, 24)
+2:0/0/y_sort_origin = -10
+2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_nfk4m"]
-texture = ExtResource("6_hq1ik")
-texture_region_size = Vector2i(64, 16)
-0:0/size_in_atlas = Vector2i(1, 4)
+texture = ExtResource("2_nfk4m")
+texture_region_size = Vector2i(32, 16)
 0:0/0 = 0
-0:0/0/texture_origin = Vector2i(-1, 24)
-0:0/0/y_sort_origin = -10
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
 
 [sub_resource type="TileSet" id="TileSet_2c62f"]
 tile_shape = 1
 tile_size = Vector2i(32, 16)
 physics_layer_0/collision_layer = 1
-sources/2 = SubResource("TileSetAtlasSource_8mm7a")
-sources/1 = SubResource("TileSetAtlasSource_hq1ik")
-sources/3 = SubResource("TileSetAtlasSource_nfk4m")
+sources/4 = SubResource("TileSetAtlasSource_hq1ik")
+sources/5 = SubResource("TileSetAtlasSource_nfk4m")
+tile_proxies/coords_level = [[1, Vector2i(0, 0)], [4, Vector2i(0, 0)], [2, Vector2i(0, 0)], [4, Vector2i(1, 0)], [3, Vector2i(0, 0)], [4, Vector2i(2, 0)]]
 
 [node name="TileMapManager" type="TileMapManager"]
 y_sort_enabled = true
@@ -92,5 +89,5 @@ position = Vector2(192, 184)
 
 [node name="ForegroundLayer" type="TileMapLayer" parent="."]
 y_sort_enabled = true
-tile_map_data = PackedByteArray("AAACABUAAwAAAAAAAAACABYAAwAAAAAAAAABABcAAwAAAAAAAAADABQAAwAAAAAAAAADABMAAwAAAAAAAAAEABMAAgAAAAAAAAAFABQAAQAAAAAAAAAFABUAAgAAAAAAAAAGABYAAgAAAAAAAAAGABcAAQAAAAAAAAAHABgAAgAAAAAAAAAHABkAAgAAAAAAAAAIABoAAQAAAAAAAAAIABsAAgAAAAAAAAAJABwAAgAAAAAAAAAJAB0AAQAAAAAAAAAKAB4AAgAAAAAAAAABABgAAwAAAAAAAAAAABkAAwAAAAAAAAAAABoAAwAAAAAAAAD//xsAAwAAAAAAAAA=")
+tile_map_data = PackedByteArray("AAACABUABAACAAAAAAACABYABAACAAAAAAABABcABAACAAAAAAADABQABAACAAAAAAADABMABAACAAAAAAAEABMABAABAAAAAAAFABQABAAAAAAAAAAFABUABAAAAAAAAAAGABYABAAAAAAAAAAGABcABAAAAAAAAAAHABgABAAAAAAAAAAHABkABAAAAAAAAAAIABoABAAAAAAAAAAIABsABAAAAAAAAAAJABwABAABAAAAAAAJAB0ABAABAAAAAAABABgABAACAAAAAAAAABkABAACAAAAAAAAABoABAACAAAAAAD//xsABAACAAAAAAAKAB4ABAABAAAAAAD//x0ABQAAAAAAAAAAAB4ABQAAAAAAAAAAAB8ABQAAAAAAAAABACAABQAAAAAAAAABACEABQAAAAAAAAACACIABQAAAAAAAAACACMABQAAAAAAAAADACQABQAAAAAAAAADACUABQAAAAAAAAAEACYABQAAAAAAAAAEACcABQAAAAAAAAAFACgABQAAAAAAAAAFACkABQAAAAAAAAAGACgABQAAAAAAAAAGACcABQAAAAAAAAAHACYABQAAAAAAAAAHACUABQAAAAAAAAAIACQABQAAAAAAAAAIACMABQAAAAAAAAAJACIABQAAAAAAAAAJACEABQAAAAAAAAAKACAABQAAAAAAAAAKAB8ABQAAAAAAAAA=")
 tile_set = SubResource("TileSet_2c62f")
