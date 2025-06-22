@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=4 uid="uid://d272qjg344h42"]
+[gd_scene load_steps=12 format=4 uid="uid://d272qjg344h42"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_0f027"]
 [ext_resource type="PackedScene" uid="uid://d2qpmlidd3tnc" path="res://player.tscn" id="2_2c62f"]
 [ext_resource type="Texture2D" uid="uid://b15m0ktxit6rt" path="res://tavern-tiles/black.png" id="2_nfk4m"]
 [ext_resource type="PackedScene" uid="uid://bw143apto6v50" path="res://barrel.tscn" id="3_d5x1h"]
 [ext_resource type="Texture2D" uid="uid://bqm7ifkr3cmod" path="res://tavern-walls/tavern-walls.png" id="4_8mm7a"]
+[ext_resource type="PackedScene" uid="uid://c0ea5j37ylxnc" path="res://wolf.tscn" id="6_hq1ik"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2c62f"]
 texture = ExtResource("1_0f027")
@@ -91,3 +92,6 @@ position = Vector2(192, 184)
 y_sort_enabled = true
 tile_map_data = PackedByteArray("AAACABUABAACAAAAAAACABYABAACAAAAAAABABcABAACAAAAAAADABQABAACAAAAAAADABMABAACAAAAAAAEABMABAABAAAAAAAFABQABAAAAAAAAAAFABUABAAAAAAAAAAGABYABAAAAAAAAAAGABcABAAAAAAAAAAHABgABAAAAAAAAAAHABkABAAAAAAAAAAIABoABAAAAAAAAAAIABsABAAAAAAAAAAJABwABAABAAAAAAAJAB0ABAABAAAAAAABABgABAACAAAAAAAAABkABAACAAAAAAAAABoABAACAAAAAAD//xsABAACAAAAAAAKAB4ABAABAAAAAAD//x0ABQAAAAAAAAAAAB4ABQAAAAAAAAAAAB8ABQAAAAAAAAABACAABQAAAAAAAAABACEABQAAAAAAAAACACIABQAAAAAAAAACACMABQAAAAAAAAADACQABQAAAAAAAAADACUABQAAAAAAAAAEACYABQAAAAAAAAAEACcABQAAAAAAAAAFACgABQAAAAAAAAAFACkABQAAAAAAAAAGACgABQAAAAAAAAAGACcABQAAAAAAAAAHACYABQAAAAAAAAAHACUABQAAAAAAAAAIACQABQAAAAAAAAAIACMABQAAAAAAAAAJACIABQAAAAAAAAAJACEABQAAAAAAAAAKACAABQAAAAAAAAAKAB8ABQAAAAAAAAA=")
 tile_set = SubResource("TileSet_2c62f")
+
+[node name="Wolf" parent="." instance=ExtResource("6_hq1ik")]
+position = Vector2(208, 231)

@@ -4,6 +4,7 @@ mod character;
 mod tilemap_manager;
 mod player;
 mod util;
+mod wolf;
 
 struct MyExtension;
 
