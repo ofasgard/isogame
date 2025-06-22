@@ -1046,3 +1046,6 @@ animation = &"nw_idle"
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 position = Vector2(0, -3)
 polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(1.5, 1.5)
