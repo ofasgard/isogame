@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=4 uid="uid://d272qjg344h42"]
+[gd_scene load_steps=13 format=4 uid="uid://d272qjg344h42"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_0f027"]
 [ext_resource type="PackedScene" uid="uid://d2qpmlidd3tnc" path="res://player.tscn" id="2_2c62f"]
@@ -67,8 +67,6 @@ sources/2 = SubResource("TileSetAtlasSource_8mm7a")
 sources/1 = SubResource("TileSetAtlasSource_hq1ik")
 sources/3 = SubResource("TileSetAtlasSource_nfk4m")
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_d5x1h"]
-
 [node name="TileMapManager" type="TileMapManager"]
 y_sort_enabled = true
 
@@ -96,7 +94,3 @@ position = Vector2(192, 184)
 y_sort_enabled = true
 tile_map_data = PackedByteArray("AAACABUAAwAAAAAAAAACABYAAwAAAAAAAAABABcAAwAAAAAAAAADABQAAwAAAAAAAAADABMAAwAAAAAAAAAEABMAAgAAAAAAAAAFABQAAQAAAAAAAAAFABUAAgAAAAAAAAAGABYAAgAAAAAAAAAGABcAAQAAAAAAAAAHABgAAgAAAAAAAAAHABkAAgAAAAAAAAAIABoAAQAAAAAAAAAIABsAAgAAAAAAAAAJABwAAgAAAAAAAAAJAB0AAQAAAAAAAAAKAB4AAgAAAAAAAAABABgAAwAAAAAAAAAAABkAAwAAAAAAAAAAABoAAwAAAAAAAAD//xsAAwAAAAAAAAA=")
 tile_set = SubResource("TileSet_2c62f")
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(96, 208)
-texture = SubResource("PlaceholderTexture2D_d5x1h")
