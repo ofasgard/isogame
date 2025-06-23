@@ -45,18 +45,8 @@ impl INode2D for TileMapManager {
 		
 		for node in entities.iter_shared() {
 			self.lock_entity(&node);
-			self.register_tile_signals(&node);
+			self.register_signals(&node);
 		}
-		
-		// TODO testing pathfinding between wolf and deer
-		let wolf : Gd<Wolf> = self.base().get_node_as("Wolf");
-		let player : Gd<Player> = self.base().get_node_as("Player");
-		let wolf_pos = self.global_to_grid(wolf.get_position());
-		let player_pos = self.global_to_grid(player.get_position());
-		
-		let nav = self.nav.as_mut().unwrap();
-		let path = nav.get_id_path(wolf_pos, player_pos);
-		godot_print!("Wolf to Deer: {:?}", path);
 	}
 }
 
@@ -107,8 +97,6 @@ impl TileMapManager {
 
 	/// Locks an entity's global position to the isometric grid of the tilemap.
 	fn lock_entity(&self, node: &Gd<Node>) {
-		let tilemap = self.tilemap.as_ref().unwrap();
-	
 		// First, convert the entity's global coordinates to grid coordinates.
 		let mut node2d : Gd<Node2D> = node.clone().cast();
 		let pos = node2d.get_position();
@@ -119,8 +107,8 @@ impl TileMapManager {
 		node2d.set_position(new_pos);
 	}
 	
-	/// Registers signal handlers for the `on_reserve` and `on_unreserve` signals.
-	fn register_tile_signals(&mut self, node: &Gd<Node>) {
+	/// Registers signal handlers.
+	fn register_signals(&mut self, node: &Gd<Node>) {
 		match node.get_class().to_string().as_str() {
 			"Player" => self.register_player_signals(node.clone()),
 			"Wolf" => self.register_wolf_signals(node.clone()),
@@ -138,13 +126,12 @@ impl TileMapManager {
 		let wolf : Gd<Wolf> = node.cast();
 		wolf.signals().reserve_tile().connect_other(self, Self::on_reserve_wolf);
 		wolf.signals().unreserve_tile().connect_other(self, Self::on_unreserve);
+		wolf.signals().needs_path().connect_other(self, Self::on_needs_path);
 	}
 	
 	/// When the `reserve_tile` signal is received, check whether the player is allowed to move.
 	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
 	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
 		let mut player = instance.bind_mut();
 		let coords = player.calculate_destination();
 	
@@ -164,8 +151,6 @@ impl TileMapManager {
 	/// When the `reserve_tile` signal is received, check whether the wolf is allowed to move.
 	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
 	fn on_reserve_wolf(&mut self, mut instance: Gd<Wolf>) {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
 		let mut wolf = instance.bind_mut();
 		let coords = wolf.calculate_destination();
 	
@@ -194,5 +179,16 @@ impl TileMapManager {
 			}
 			true
 		});
+	}
+	
+	fn on_needs_path(&mut self, mut instance: Gd<Wolf>) {
+		let wolf_pos = self.global_to_grid(instance.get_position());
+		
+		let player : Gd<Player> = self.base().get_node_as("Player");
+		let player_pos = self.global_to_grid(player.get_position());
+		
+		let nav = self.nav.as_mut().unwrap();
+		let path = nav.get_id_path(wolf_pos, player_pos);
+		instance.bind_mut().set_path(path);
 	}
 }

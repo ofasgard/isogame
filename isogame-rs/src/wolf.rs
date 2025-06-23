@@ -15,6 +15,8 @@ pub struct Wolf {
 	speed: f32,
 	facing: IsometricFacing,
 	destination: Option<Vector2>,
+	pathfinding_timer: f64,
+	path: Array<Vector2i>,
 	base: Base<CharacterBody2D>
 }
 
@@ -24,6 +26,8 @@ impl Wolf {
 	pub fn reserve_tile(instance: Gd<Wolf>);
 	#[signal]
 	pub fn unreserve_tile(coords: Vector2);
+	#[signal]
+	pub fn needs_path(instance: Gd<Wolf>);
 }
 
 #[godot_api]
@@ -33,6 +37,8 @@ impl ICharacterBody2D for Wolf {
 			speed: 3.5,
 			facing: IsometricFacing::SW,
 			destination: None,
+			path: Array::new(),
+			pathfinding_timer: 0.0,
 			base
 		}
 	}
@@ -49,8 +55,36 @@ impl ICharacterBody2D for Wolf {
 	fn physics_process(&mut self, delta: f64) {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
-		// TODO - use pathfinding to determine where to go next...
+		if self.is_moving() {
+			// If we are moving, set walk animation and keep moving.
+			sprite.set_animation(&self.facing.get_walk_animation());
+			self.keep_moving(delta);
+		} else {
+			// Otherwise, play the idle animation and search for a target.
+			sprite.set_animation(&self.facing.get_idle_animation());
+			self.find_target(delta);
+		}
 	}
+}
+
+impl Wolf {
+	pub fn find_target(&mut self, delta: f64) {
+		self.pathfinding_timer += delta;
+
+		// If we don't have a path, or if 1 full second has elapsed, update our current path.
+		if self.pathfinding_timer >= 1.0 {
+			let gd = self.to_gd();
+			let mut sig = self.signals().needs_path();
+			sig.emit(&gd);
+			self.pathfinding_timer = 0.0;
+			return;
+		}
+		
+		godot_print!("Path to deer: {:?}", self.path);
+		// TODO - find a path and use it to update destination
+	}
+	
+	pub fn set_path(&mut self, path: Array<Vector2i>) { self.path = path; }
 }
 
 impl Character for Wolf {
