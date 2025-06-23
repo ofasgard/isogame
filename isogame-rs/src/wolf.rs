@@ -49,7 +49,7 @@ impl ICharacterBody2D for Wolf {
 	fn physics_process(&mut self, delta: f64) {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
-		// TODO
+		// TODO - use pathfinding to determine where to go next...
 	}
 }
 

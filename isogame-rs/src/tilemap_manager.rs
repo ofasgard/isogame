@@ -38,6 +38,15 @@ impl INode2D for TileMapManager {
 		
 		self.nav = Some(self.initialise_pathfinding());
 		
+		let nav = self.nav.as_mut().unwrap();
+		let tilemap = self.tilemap.as_ref().unwrap();
+		
+		let start = tilemap_to_astar(Vector2i::new(-14, 14));
+		let end = tilemap_to_astar(Vector2i::new(-6, 27));
+		godot_print!("Path: {}, {}", &start, &end);
+		let path = nav.get_id_path(start, end);
+		godot_print!("{:?}", path);
+		
 		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
 		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
@@ -53,21 +62,33 @@ impl TileMapManager {
 	fn initialise_pathfinding(&self) -> Gd<AStarGrid2D> {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		
+		// Basic configuration.
 		let mut nav : Gd<AStarGrid2D> = AStarGrid2D::new_gd();
 		nav.set_cell_shape(CellShape::ISOMETRIC_RIGHT);
 		nav.set_diagonal_mode(DiagonalMode::NEVER);
 		nav.set_default_compute_heuristic(Heuristic::MANHATTAN);
-		
-		let region = tilemap.get_used_rect();
-		nav.set_region(region);
-		
+
+		// Set the correct tile size.
 		let tileset = tilemap.get_tile_set().unwrap();
 		let tile_size = tileset.get_tile_size().cast_float();
 		nav.set_cell_size(tile_size);
+
+		// Set the correct tilemap size.
+		let origin = Vector2i::ZERO;
+		let limit = self.base().get_viewport_rect().size / tile_size;
+		let region = Rect2i::new(origin, limit.cast_int());
+		nav.set_region(region);
 		
 		nav.update();
 		
-		// TODO add points for solid tiles, then add logic in signal handlers for reserved tiles
+		// Mark solid tiles as impassable
+		let foreground : Gd<TileMapLayer> = self.base().get_node_as("ForegroundLayer");
+		let foreground_tiles = foreground.get_used_cells();
+		
+		for tile in foreground_tiles.iter_shared() {
+			let astar_tile = tilemap_to_astar(tile);
+			nav.set_point_solid(astar_tile);
+		}
 		
 		nav
 	}
@@ -107,11 +128,13 @@ impl TileMapManager {
 	/// When the `reserve_tile` signal is received, check whether the player is allowed to move.
 	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
 	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let nav = self.nav.as_mut().unwrap();
+		
 		let mut player = instance.bind_mut();
 		let coords = player.calculate_destination();
 	
 		// Check if the tile is currently occupied.
-		let tilemap = self.tilemap.as_ref().unwrap();
 		let local_pos = tilemap.to_local(coords);
 		let grid_pos = tilemap.local_to_map(local_pos);
 		
@@ -120,18 +143,28 @@ impl TileMapManager {
 		}
 		
 		self.reserved_tiles.push(grid_pos);
+		nav.set_point_solid(tilemap_to_astar(grid_pos));
 		player.start_moving();
 	}
 	
 	/// When the `unreserve_tile` signal is received, remove all matching tiles from the internal `reserved_tiles` vector.
 	fn on_unreserve_player(&mut self, coords: Vector2) {
 		let tilemap = self.tilemap.as_ref().unwrap();
+		let nav = self.nav.as_mut().unwrap();
+		
 		let local_pos = tilemap.to_local(coords);
 		let grid_pos = tilemap.local_to_map(local_pos);
 		
 		self.reserved_tiles.retain(|i| {
-			if *i == grid_pos { godot_print!("{}", &grid_pos); return false; }
+			if *i == grid_pos {
+				nav.set_point_solid_ex(tilemap_to_astar(grid_pos)).solid(false).done();
+				return false; 
+			}
 			true
 		});
 	}
+}
+
+fn tilemap_to_astar(tilemap_coords: Vector2i) -> Vector2i {
+	tilemap_coords * Vector2i::new(-1, 1)
 }
