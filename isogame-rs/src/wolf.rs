@@ -16,7 +16,6 @@ pub struct Wolf {
 	facing: IsometricFacing,
 	destination: Option<Vector2>,
 	pathfinding_timer: f64,
-	path: Array<Vector2i>,
 	base: Base<CharacterBody2D>
 }
 
@@ -37,7 +36,6 @@ impl ICharacterBody2D for Wolf {
 			speed: 3.5,
 			facing: IsometricFacing::SW,
 			destination: None,
-			path: Array::new(),
 			pathfinding_timer: 0.0,
 			base
 		}
@@ -79,12 +77,7 @@ impl Wolf {
 			self.pathfinding_timer = 0.0;
 			return;
 		}
-		
-		godot_print!("Path to deer: {:?}", self.path);
-		// TODO - find a path and use it to update destination
 	}
-	
-	pub fn set_path(&mut self, path: Array<Vector2i>) { self.path = path; }
 }
 
 impl Character for Wolf {

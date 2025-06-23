@@ -189,6 +189,8 @@ impl TileMapManager {
 		
 		let nav = self.nav.as_mut().unwrap();
 		let path = nav.get_id_path(wolf_pos, player_pos);
-		instance.bind_mut().set_path(path);
+		
+		// TODO - figure out which direction our destination is
+		// TODO - update facing according to destination direction
 	}
 }
