@@ -50,6 +50,18 @@ impl INode2D for TileMapManager {
 }
 
 impl TileMapManager {
+	fn grid_to_global(&self, coords: Vector2i) -> Vector2 {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let local_coords = tilemap.map_to_local(coords);
+		tilemap.to_global(local_coords)
+	}
+	
+	fn global_to_grid(&self, coords: Vector2) -> Vector2i {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let local_coords = tilemap.to_local(coords);
+		tilemap.local_to_map(local_coords)
+	}
+
 	fn initialise_pathfinding(&self) -> Gd<AStarGrid2D> {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		
@@ -89,12 +101,10 @@ impl TileMapManager {
 		// First, convert the entity's global coordinates to grid coordinates.
 		let mut node2d : Gd<Node2D> = node.clone().cast();
 		let pos = node2d.get_position();
-		let local_pos = tilemap.to_local(pos);
-		let grid_pos = tilemap.local_to_map(local_pos);
+		let grid_pos = self.global_to_grid(pos);
 		
 		// Then convert them back into global coordinates.
-		let mut new_pos = tilemap.map_to_local(grid_pos);
-		new_pos = tilemap.to_global(new_pos);
+		let new_pos = self.grid_to_global(grid_pos);
 		node2d.set_position(new_pos);
 	}
 	
@@ -118,31 +128,27 @@ impl TileMapManager {
 	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
 	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
 		let tilemap = self.tilemap.as_ref().unwrap();
-		let nav = self.nav.as_mut().unwrap();
 		
 		let mut player = instance.bind_mut();
 		let coords = player.calculate_destination();
 	
 		// Check if the tile is currently occupied.
-		let local_pos = tilemap.to_local(coords);
-		let grid_pos = tilemap.local_to_map(local_pos);
+		let grid_pos = self.global_to_grid(coords);
 		
 		if self.reserved_tiles.contains(&grid_pos) {
 			return;
 		}
+		let nav = self.nav.as_mut().unwrap();
+		nav.set_point_solid(grid_pos);
 		
 		self.reserved_tiles.push(grid_pos);
-		nav.set_point_solid(grid_pos);
 		player.start_moving();
 	}
 	
 	/// When the `unreserve_tile` signal is received, remove all matching tiles from the internal `reserved_tiles` vector.
 	fn on_unreserve_player(&mut self, coords: Vector2) {
-		let tilemap = self.tilemap.as_ref().unwrap();
+		let grid_pos = self.global_to_grid(coords);
 		let nav = self.nav.as_mut().unwrap();
-		
-		let local_pos = tilemap.to_local(coords);
-		let grid_pos = tilemap.local_to_map(local_pos);
 		
 		self.reserved_tiles.retain(|i| {
 			if *i == grid_pos {
