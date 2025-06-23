@@ -2,6 +2,10 @@ use godot::prelude::*;
 use godot::classes::Node2D;
 use godot::classes::INode2D;
 use godot::classes::TileMapLayer;
+use godot::classes::AStarGrid2D;
+use godot::classes::a_star_grid_2d::CellShape;
+use godot::classes::a_star_grid_2d::DiagonalMode;
+use godot::classes::a_star_grid_2d::Heuristic;
 
 use crate::character::Character;
 use crate::player::Player;
@@ -11,6 +15,7 @@ use crate::player::Player;
 #[class(base=Node2D)]
 struct TileMapManager {
 	tilemap: Option<Gd<TileMapLayer>>,
+	nav: Option<Gd<AStarGrid2D>>,
 	reserved_tiles: Vec<Vector2i>,
 	base: Base<Node2D>
 }
@@ -20,6 +25,7 @@ impl INode2D for TileMapManager {
 	fn init(base: Base<Node2D>) -> Self {
 		Self {
 			tilemap: None,
+			nav: None,
 			reserved_tiles: Vec::new(),
 			base
 		}
@@ -29,6 +35,8 @@ impl INode2D for TileMapManager {
 		// Store a pointer to the tilemap.
 		let tilemap : Gd<TileMapLayer> = self.base().get_node_as("TerrainLayer");
 		self.tilemap = Some(tilemap);
+		
+		self.nav = Some(self.initialise_pathfinding());
 		
 		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
@@ -42,6 +50,28 @@ impl INode2D for TileMapManager {
 }
 
 impl TileMapManager {
+	fn initialise_pathfinding(&self) -> Gd<AStarGrid2D> {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		
+		let mut nav : Gd<AStarGrid2D> = AStarGrid2D::new_gd();
+		nav.set_cell_shape(CellShape::ISOMETRIC_RIGHT);
+		nav.set_diagonal_mode(DiagonalMode::NEVER);
+		nav.set_default_compute_heuristic(Heuristic::MANHATTAN);
+		
+		let region = tilemap.get_used_rect();
+		nav.set_region(region);
+		
+		let tileset = tilemap.get_tile_set().unwrap();
+		let tile_size = tileset.get_tile_size().cast_float();
+		nav.set_cell_size(tile_size);
+		
+		nav.update();
+		
+		// TODO add points for solid tiles, then add logic in signal handlers for reserved tiles
+		
+		nav
+	}
+
 	/// Locks an entity's global position to the isometric grid of the tilemap.
 	fn lock_entity(&self, node: &Gd<Node>) {
 		let tilemap = self.tilemap.as_ref().unwrap();
@@ -100,7 +130,7 @@ impl TileMapManager {
 		let grid_pos = tilemap.local_to_map(local_pos);
 		
 		self.reserved_tiles.retain(|i| {
-			if *i == grid_pos { return false; }
+			if *i == grid_pos { godot_print!("{}", &grid_pos); return false; }
 			true
 		});
 	}
