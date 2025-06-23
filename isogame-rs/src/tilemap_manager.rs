@@ -45,7 +45,7 @@ impl INode2D for TileMapManager {
 		
 		for node in entities.iter_shared() {
 			self.lock_entity(&node);
-			self.register_tile_signal(&node);
+			self.register_tile_signals(&node);
 		}
 		
 		// TODO testing pathfinding between wolf and deer
@@ -120,19 +120,24 @@ impl TileMapManager {
 	}
 	
 	/// Registers signal handlers for the `on_reserve` and `on_unreserve` signals.
-	fn register_tile_signal(&mut self, node: &Gd<Node>) {
+	fn register_tile_signals(&mut self, node: &Gd<Node>) {
 		match node.get_class().to_string().as_str() {
 			"Player" => self.register_player_signals(node.clone()),
+			"Wolf" => self.register_wolf_signals(node.clone()),
 			_ => ()
 		};
 	}
 	
 	fn register_player_signals(&mut self, node: Gd<Node>) {
 		let player : Gd<Player> = node.cast();
-		let reserve = player.signals().reserve_tile();
-		let unreserve = player.signals().unreserve_tile();
-		reserve.connect_other(self, Self::on_reserve_player);
-		unreserve.connect_other(self, Self::on_unreserve_player);
+		player.signals().reserve_tile().connect_other(self, Self::on_reserve_player);
+		player.signals().unreserve_tile().connect_other(self, Self::on_unreserve);
+	}
+	
+	fn register_wolf_signals(&mut self, node: Gd<Node>) {
+		let wolf : Gd<Wolf> = node.cast();
+		wolf.signals().reserve_tile().connect_other(self, Self::on_reserve_wolf);
+		wolf.signals().unreserve_tile().connect_other(self, Self::on_unreserve);
 	}
 	
 	/// When the `reserve_tile` signal is received, check whether the player is allowed to move.
@@ -156,8 +161,29 @@ impl TileMapManager {
 		player.start_moving();
 	}
 	
+	/// When the `reserve_tile` signal is received, check whether the wolf is allowed to move.
+	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
+	fn on_reserve_wolf(&mut self, mut instance: Gd<Wolf>) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		
+		let mut wolf = instance.bind_mut();
+		let coords = wolf.calculate_destination();
+	
+		// Check if the tile is currently occupied.
+		let grid_pos = self.global_to_grid(coords);
+		
+		if self.reserved_tiles.contains(&grid_pos) {
+			return;
+		}
+		let nav = self.nav.as_mut().unwrap();
+		nav.set_point_solid(grid_pos);
+		
+		self.reserved_tiles.push(grid_pos);
+		wolf.start_moving();
+	}
+	
 	/// When the `unreserve_tile` signal is received, remove all matching tiles from the internal `reserved_tiles` vector.
-	fn on_unreserve_player(&mut self, coords: Vector2) {
+	fn on_unreserve(&mut self, coords: Vector2) {
 		let grid_pos = self.global_to_grid(coords);
 		let nav = self.nav.as_mut().unwrap();
 		
