@@ -9,6 +9,7 @@ use godot::classes::a_star_grid_2d::Heuristic;
 
 use crate::character::Character;
 use crate::player::Player;
+use crate::wolf::Wolf;
 
 /// Responsible for managing the isometric tilemap and the entities within it.
 #[derive(GodotClass)]
@@ -46,6 +47,16 @@ impl INode2D for TileMapManager {
 			self.lock_entity(&node);
 			self.register_tile_signal(&node);
 		}
+		
+		// TODO testing pathfinding between wolf and deer
+		let wolf : Gd<Wolf> = self.base().get_node_as("Wolf");
+		let player : Gd<Player> = self.base().get_node_as("Player");
+		let wolf_pos = self.global_to_grid(wolf.get_position());
+		let player_pos = self.global_to_grid(player.get_position());
+		
+		let nav = self.nav.as_mut().unwrap();
+		let path = nav.get_id_path(wolf_pos, player_pos);
+		godot_print!("Wolf to Deer: {:?}", path);
 	}
 }
 
