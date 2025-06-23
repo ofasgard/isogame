@@ -38,15 +38,6 @@ impl INode2D for TileMapManager {
 		
 		self.nav = Some(self.initialise_pathfinding());
 		
-		let nav = self.nav.as_mut().unwrap();
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
-		let start = tilemap_to_astar(Vector2i::new(-14, 14));
-		let end = tilemap_to_astar(Vector2i::new(-6, 27));
-		godot_print!("Path: {}, {}", &start, &end);
-		let path = nav.get_id_path(start, end);
-		godot_print!("{:?}", path);
-		
 		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
 		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
@@ -74,11 +65,10 @@ impl TileMapManager {
 		nav.set_cell_size(tile_size);
 
 		// Set the correct tilemap size.
-		let origin = Vector2i::ZERO;
 		let limit = self.base().get_viewport_rect().size / tile_size;
-		let region = Rect2i::new(origin, limit.cast_int());
+		let region = Rect2i::new(-limit.cast_int(), limit.cast_int() * 2);
 		nav.set_region(region);
-		
+
 		nav.update();
 		
 		// Mark solid tiles as impassable
@@ -86,8 +76,7 @@ impl TileMapManager {
 		let foreground_tiles = foreground.get_used_cells();
 		
 		for tile in foreground_tiles.iter_shared() {
-			let astar_tile = tilemap_to_astar(tile);
-			nav.set_point_solid(astar_tile);
+			nav.set_point_solid(tile);
 		}
 		
 		nav
@@ -143,7 +132,7 @@ impl TileMapManager {
 		}
 		
 		self.reserved_tiles.push(grid_pos);
-		nav.set_point_solid(tilemap_to_astar(grid_pos));
+		nav.set_point_solid(grid_pos);
 		player.start_moving();
 	}
 	
@@ -157,14 +146,10 @@ impl TileMapManager {
 		
 		self.reserved_tiles.retain(|i| {
 			if *i == grid_pos {
-				nav.set_point_solid_ex(tilemap_to_astar(grid_pos)).solid(false).done();
+				nav.set_point_solid_ex(grid_pos).solid(false).done();
 				return false; 
 			}
 			true
 		});
 	}
-}
-
-fn tilemap_to_astar(tilemap_coords: Vector2i) -> Vector2i {
-	tilemap_coords * Vector2i::new(-1, 1)
 }
