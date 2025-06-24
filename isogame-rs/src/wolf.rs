@@ -3,7 +3,6 @@ use godot::builtin::Vector2;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
-use godot::classes::RayCast2D;
 use godot::classes::TileMapLayer;
 use godot::classes::AStarGrid2D;
 
@@ -54,6 +53,14 @@ impl ICharacterBody2D for Wolf {
 	}
 	
 	fn physics_process(&mut self, delta: f64) {
+		if !self.has_nav() {
+			// If we don't have pathfinding data, request it and wait.
+			let gd = self.to_gd();
+			let mut sig = self.signals().update_nav();
+			sig.emit(&gd);
+			return;
+		}
+	
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		// TODO
@@ -63,4 +70,9 @@ impl ICharacterBody2D for Wolf {
 impl Wolf {
 	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
 	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
+	
+	/// Check whether the mob has pathfinding data.
+	fn has_nav(&self) -> bool {
+		self.tilemap.is_some() && self.nav.is_some()
+	}
 }

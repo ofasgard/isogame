@@ -89,7 +89,7 @@ impl TileMapManager {
 		// Mark all static "scenery" as impassable.
 		let entities = tree.get_nodes_in_group("scenery");
 		for entity in entities.iter_shared() {
-			let mut node : Gd<Node2D> = entity.cast();
+			let node : Gd<Node2D> = entity.cast();
 			let pos = node.get_position();
 			let tile = global_to_grid(&tilemap, pos);
 			nav.set_point_solid(tile);

@@ -3,7 +3,6 @@ use godot::builtin::Vector2;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
-use godot::classes::RayCast2D;
 use godot::classes::TileMapLayer;
 use godot::classes::AStarGrid2D;
 
@@ -78,7 +77,6 @@ impl ICharacterBody2D for Player {
 		} else {
 			// Otherwise, play the idle animation.
 			sprite.set_animation(&self.facing.get_idle_animation());
-			
 			// And reserve the current tile.
 			self.reserve_current_tile();
 		}	

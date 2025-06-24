@@ -390,8 +390,6 @@ sprite_frames = SubResource("SpriteFrames_ykb7g")
 animation = &"ne_idle"
 offset = Vector2(0, -10)
 
-[node name="RayCast2D" type="RayCast2D" parent="."]
-
 [node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="."]
 position = Vector2(0, -3)
 polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
