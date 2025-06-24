@@ -45,6 +45,16 @@ pub enum IsometricFacing {
 
 
 impl IsometricFacing {
+	pub fn from_movement_vector(vector: Vector2, tile_width: f32) -> Option<Self> {
+		match vector {
+			val if val == IsometricFacing::NW.get_movement_vector(tile_width) => Some(IsometricFacing::NW),
+			val if val == IsometricFacing::NE.get_movement_vector(tile_width) => Some(IsometricFacing::NE),
+			val if val == IsometricFacing::SW.get_movement_vector(tile_width) => Some(IsometricFacing::SW),
+			val if val == IsometricFacing::SE.get_movement_vector(tile_width) => Some(IsometricFacing::SE),
+			_ => None
+		}
+	}
+
 	pub fn to_string(&self) -> String {
 		match self {
 			IsometricFacing::NW => "nw".to_string(),

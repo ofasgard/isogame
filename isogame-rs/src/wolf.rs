@@ -71,8 +71,9 @@ impl ICharacterBody2D for Wolf {
 			sprite.set_animation(&self.facing.get_walk_animation());
 			self.keep_moving(delta);
 		} else if let Some(next_tile) = self.find_path() {
-			godot_print!("Wolf found path: {}", &next_tile);
-			// TODO
+			self.face_tile(next_tile);
+			sprite.set_animation(&self.facing.get_walk_animation());
+			self.try_moving();
 		} else {
 			// Otherwise, play the idle animation.
 			sprite.set_animation(&self.facing.get_idle_animation());
@@ -154,7 +155,7 @@ impl Wolf {
 		let tilemap = self.tilemap.as_mut().unwrap();
 		let neighbours = tilemap.get_surrounding_cells(target_pos);
 		
-		let mut nav = self.nav.as_mut().unwrap();
+		let nav = self.nav.as_mut().unwrap();
 		for neighbour in neighbours.iter_shared() {
 			// Perform pathfinding.
 			let path = nav.get_id_path(origin_pos, neighbour);
@@ -162,6 +163,48 @@ impl Wolf {
 			if path.len() > 1 { return path.get(1); }
 		}
 		None
+	}
+	
+	/// Update your facing to move into the specified adjacent tile.
+	fn face_tile(&mut self, tile: Vector2i) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		
+		let pos = self.base().get_position();
+		let tilepos = tilemap_manager::grid_to_global(&tilemap, tile);
+		let movement_vector = tilepos - pos;
+		
+		match IsometricFacing::from_movement_vector(movement_vector, 32.0) {
+			Some(facing) => self.facing = facing,
+			None => panic!("Wolf tried to move in an illegal direction!")
+		};
+	}
+	
+	/// Check for collision in the direction you're currently facing. If you're allowed to move, move.
+	fn try_moving(&mut self) {
+		if !self.has_nav() { return; }
+		
+		// Calculate where we're going, based on our current facing.
+		let destination = self.calculate_movement();
+		
+		// Convert to grid coordinates.
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let destination_grid = tilemap_manager::global_to_grid(&tilemap, destination);
+		
+		// If the destination is occupied, we can't move.
+		let nav = self.nav.as_mut().unwrap();
+		if nav.is_point_solid(destination_grid) {
+			return;
+		}
+		
+		// Otherwise, reserve the tile for movement...
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(destination_grid);
+		
+		// Unreserve our current tile...
+		self.unreserve_current_tile();
+		
+		// And start moving by updating our destination.
+		self.destination = Some(destination);
 	}
 	
 	/// Continue moving towards our current destination.
