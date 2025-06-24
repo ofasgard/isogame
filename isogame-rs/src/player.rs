@@ -56,6 +56,14 @@ impl ICharacterBody2D for Player {
 	}
 	
 	fn physics_process(&mut self, delta: f64) {
+		if !self.has_nav() {
+			// If we don't have pathfinding data, request it and wait.
+			let gd = self.to_gd();
+			let mut sig = self.signals().update_nav();
+			sig.emit(&gd);
+			return;
+		}
+	
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		if self.is_moving() {
@@ -70,6 +78,9 @@ impl ICharacterBody2D for Player {
 		} else {
 			// Otherwise, play the idle animation.
 			sprite.set_animation(&self.facing.get_idle_animation());
+			
+			// And reserve the current tile.
+			self.reserve_current_tile();
 		}	
 	}
 }
@@ -77,10 +88,31 @@ impl ICharacterBody2D for Player {
 impl Player {
 	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
 	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
-	
+
 	/// Check whether the player has pathfinding data.
-	pub fn has_nav(&self) -> bool {
+	fn has_nav(&self) -> bool {
 		self.tilemap.is_some() && self.nav.is_some()
+	}
+	
+	fn reserve_current_tile(&mut self) {
+		if !self.has_nav() { return; }
+	
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let pos = self.base().get_position();
+		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(gridpos);
+	}
+	
+	fn unreserve_current_tile(&mut self) {
+		if !self.has_nav() { return; } 
+		let tilemap = self.tilemap.as_ref().unwrap();
+		let pos = self.base().get_position();
+		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		
+		let mut sig = self.signals().unreserve_tile();
+		sig.emit(gridpos);
 	}
 	
 	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
@@ -98,13 +130,7 @@ impl Player {
 	
 	/// Check for collision in the direction you're currently facing. If you're allowed to move, move.
 	fn try_moving(&mut self) {
-		if !self.has_nav() {
-			// If we don't have pathfinding data, request it and wait.
-			let gd = self.to_gd();
-			let mut sig = self.signals().update_nav();
-			sig.emit(&gd);
-			return;
-		}
+		if !self.has_nav() { return; }
 		
 		// Calculate where we're going, based on our current facing.
 		let destination = self.calculate_movement();
@@ -118,14 +144,13 @@ impl Player {
 		if nav.is_point_solid(destination_grid) {
 			return;
 		}
-		// TODO - sprites and other players aren't on the astargrid2d
-		// Previously I used a raycast2d to check for this, but I need them to show up on pathfinding as well
-		// could be as simple as reserving the tile during physics_process() and unreserving it when you move?
-		// since it's an astargrid2d, you can reserve the same tile repeatedly without causing issues - it's just a call to set_point_solid()
 		
-		// Otherwise, reserve the tile for movement.
+		// Otherwise, reserve the tile for movement...
 		let mut sig = self.signals().reserve_tile();
 		sig.emit(destination_grid);
+		
+		// Unreserve our current tile...
+		self.unreserve_current_tile();
 		
 		// And start moving by updating our destination.
 		self.destination = Some(destination);

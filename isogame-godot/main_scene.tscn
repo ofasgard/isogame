@@ -87,8 +87,8 @@ tile_set = SubResource("TileSet_gyfs4")
 [node name="Player" parent="." instance=ExtResource("2_2c62f")]
 position = Vector2(131, 284)
 
-[node name="Barrel" parent="." instance=ExtResource("3_d5x1h")]
-position = Vector2(192, 184)
+[node name="Barrel" parent="." groups=["scenery"] instance=ExtResource("3_d5x1h")]
+position = Vector2(177, 196)
 
 [node name="ForegroundLayer" type="TileMapLayer" parent="."]
 y_sort_enabled = true

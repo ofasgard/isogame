@@ -34,7 +34,7 @@ impl INode2D for TileMapManager {
 		
 		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
-		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
+		let entities = tree.get_nodes_in_group("entities");
 		
 		for node in entities.iter_shared() {
 			self.lock_to_grid(&node);
@@ -69,16 +69,31 @@ impl TileMapManager {
 		nav.set_region(region);
 
 		nav.update();
-		
-		// Mark solid tiles as impassable
+		self.nav = Some(nav);
+		self.update_pathfinding();
+	}
+	
+	fn update_pathfinding(&mut self) {
 		let foreground : Gd<TileMapLayer> = self.base().get_node_as("ForegroundLayer");
-		let foreground_tiles = foreground.get_used_cells();
 		
+		let mut tree = self.base().get_tree().unwrap();
+		let tilemap =  self.tilemap.as_ref().unwrap();
+		let nav = self.nav.as_mut().unwrap();
+		
+		// Mark all foreground tiles as impassable, since they represent walls and such.
+		let foreground_tiles = foreground.get_used_cells();
 		for tile in foreground_tiles.iter_shared() {
 			nav.set_point_solid(tile);
 		}
 		
-		self.nav = Some(nav);
+		// Mark all static "scenery" as impassable.
+		let entities = tree.get_nodes_in_group("scenery");
+		for entity in entities.iter_shared() {
+			let mut node : Gd<Node2D> = entity.cast();
+			let pos = node.get_position();
+			let tile = global_to_grid(&tilemap, pos);
+			nav.set_point_solid(tile);
+		}	
 	}
 	
 	/// Locks an entity's global position to the isometric grid of the tilemap.
@@ -152,191 +167,3 @@ pub fn global_to_grid(tilemap: &TileMapLayer, coords: Vector2) -> Vector2i {
 	let local_coords = tilemap.to_local(coords);
 	tilemap.local_to_map(local_coords)
 }
-
-/*
-
-/// Responsible for managing the isometric tilemap and the entities within it.
-#[derive(GodotClass)]
-#[class(base=Node2D)]
-struct TileMapManager {
-	tilemap: Option<Gd<TileMapLayer>>,
-	nav: Option<Gd<AStarGrid2D>>,
-	reserved_tiles: Vec<Vector2i>,
-	base: Base<Node2D>
-}
-
-#[godot_api]
-impl INode2D for TileMapManager {
-	fn init(base: Base<Node2D>) -> Self {
-		Self {
-			tilemap: None,
-			nav: None,
-			reserved_tiles: Vec::new(),
-			base
-		}
-	}
-	
-	fn ready(&mut self) {
-		// Store a pointer to the tilemap.
-		let tilemap : Gd<TileMapLayer> = self.base().get_node_as("TerrainLayer");
-		self.tilemap = Some(tilemap);
-		
-		self.nav = Some(self.initialise_pathfinding());
-		
-		// Initialise all entities within the tilemap.
-		let mut tree = self.base().get_tree().unwrap();
-		let entities = tree.get_nodes_in_group("entities"); // TODO this is only done once at startup - what if more entities appear???
-		
-		for node in entities.iter_shared() {
-			self.lock_entity(&node);
-			self.register_signals(&node);
-		}
-	}
-}
-
-impl TileMapManager {
-	fn grid_to_global(&self, coords: Vector2i) -> Vector2 {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		let local_coords = tilemap.map_to_local(coords);
-		tilemap.to_global(local_coords)
-	}
-	
-	fn global_to_grid(&self, coords: Vector2) -> Vector2i {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		let local_coords = tilemap.to_local(coords);
-		tilemap.local_to_map(local_coords)
-	}
-
-	fn initialise_pathfinding(&self) -> Gd<AStarGrid2D> {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
-		// Basic configuration.
-		let mut nav : Gd<AStarGrid2D> = AStarGrid2D::new_gd();
-		nav.set_cell_shape(CellShape::ISOMETRIC_RIGHT);
-		nav.set_diagonal_mode(DiagonalMode::NEVER);
-		nav.set_default_compute_heuristic(Heuristic::MANHATTAN);
-
-		// Set the correct tile size.
-		let tileset = tilemap.get_tile_set().unwrap();
-		let tile_size = tileset.get_tile_size().cast_float();
-		nav.set_cell_size(tile_size);
-
-		// Set the correct tilemap size.
-		let limit = self.base().get_viewport_rect().size / tile_size;
-		let region = Rect2i::new(-limit.cast_int(), limit.cast_int() * 2);
-		nav.set_region(region);
-
-		nav.update();
-		
-		// Mark solid tiles as impassable
-		let foreground : Gd<TileMapLayer> = self.base().get_node_as("ForegroundLayer");
-		let foreground_tiles = foreground.get_used_cells();
-		
-		for tile in foreground_tiles.iter_shared() {
-			nav.set_point_solid(tile);
-		}
-		
-		nav
-	}
-
-	/// Locks an entity's global position to the isometric grid of the tilemap.
-	fn lock_entity(&self, node: &Gd<Node>) {
-		// First, convert the entity's global coordinates to grid coordinates.
-		let mut node2d : Gd<Node2D> = node.clone().cast();
-		let pos = node2d.get_position();
-		let grid_pos = self.global_to_grid(pos);
-		
-		// Then convert them back into global coordinates.
-		let new_pos = self.grid_to_global(grid_pos);
-		node2d.set_position(new_pos);
-	}
-	
-	/// Registers signal handlers.
-	fn register_signals(&mut self, node: &Gd<Node>) {
-		match node.get_class().to_string().as_str() {
-			"Player" => self.register_player_signals(node.clone()),
-			"Wolf" => self.register_wolf_signals(node.clone()),
-			_ => ()
-		};
-	}
-	
-	fn register_player_signals(&mut self, node: Gd<Node>) {
-		let player : Gd<Player> = node.cast();
-		player.signals().reserve_tile().connect_other(self, Self::on_reserve_player);
-		player.signals().unreserve_tile().connect_other(self, Self::on_unreserve);
-	}
-	
-	fn register_wolf_signals(&mut self, node: Gd<Node>) {
-		let wolf : Gd<Wolf> = node.cast();
-		wolf.signals().reserve_tile().connect_other(self, Self::on_reserve_wolf);
-		wolf.signals().unreserve_tile().connect_other(self, Self::on_unreserve);
-		wolf.signals().needs_path().connect_other(self, Self::on_needs_path);
-	}
-	
-	/// When the `reserve_tile` signal is received, check whether the player is allowed to move.
-	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
-	fn on_reserve_player(&mut self, mut instance: Gd<Player>) {
-		let mut player = instance.bind_mut();
-		let coords = player.calculate_destination();
-	
-		// Check if the tile is currently occupied.
-		let grid_pos = self.global_to_grid(coords);
-		
-		if self.reserved_tiles.contains(&grid_pos) {
-			return;
-		}
-		let nav = self.nav.as_mut().unwrap();
-		nav.set_point_solid(grid_pos);
-		
-		self.reserved_tiles.push(grid_pos);
-		player.start_moving();
-	}
-	
-	/// When the `reserve_tile` signal is received, check whether the wolf is allowed to move.
-	/// If they are, mark their destination tile as reserved and invoke `start_moving()`.
-	fn on_reserve_wolf(&mut self, mut instance: Gd<Wolf>) {
-		let mut wolf = instance.bind_mut();
-		let coords = wolf.calculate_destination();
-	
-		// Check if the tile is currently occupied.
-		let grid_pos = self.global_to_grid(coords);
-		
-		if self.reserved_tiles.contains(&grid_pos) {
-			return;
-		}
-		let nav = self.nav.as_mut().unwrap();
-		nav.set_point_solid(grid_pos);
-		
-		self.reserved_tiles.push(grid_pos);
-		wolf.start_moving();
-	}
-	
-	/// When the `unreserve_tile` signal is received, remove all matching tiles from the internal `reserved_tiles` vector.
-	fn on_unreserve(&mut self, coords: Vector2) {
-		let grid_pos = self.global_to_grid(coords);
-		let nav = self.nav.as_mut().unwrap();
-		
-		self.reserved_tiles.retain(|i| {
-			if *i == grid_pos {
-				nav.set_point_solid_ex(grid_pos).solid(false).done();
-				return false; 
-			}
-			true
-		});
-	}
-	
-	fn on_needs_path(&mut self, mut instance: Gd<Wolf>) {
-		let wolf_pos = self.global_to_grid(instance.get_position());
-		
-		let player : Gd<Player> = self.base().get_node_as("Player");
-		let player_pos = self.global_to_grid(player.get_position());
-		
-		let nav = self.nav.as_mut().unwrap();
-		let path = nav.get_id_path(wolf_pos, player_pos);
-		
-		// TODO - figure out which direction our destination is
-		// TODO - update facing according to destination direction
-	}
-}
-
-*/
