@@ -2,8 +2,10 @@
 
 A WIP experimental isometric 2D game for learning purposes.
 
-- TODO: Refactor signal usage so that logic remains in the relevant class, and the TileMapManager is only responsible for passing data back and forth, or updating the objects it manages.
-- TODO: Turn pathfinding PoC into proper logic for the Wolf class.
+- Complete refactor to pass tilemaps and astargrid2d instance into the character nodes
+	- Three channels of communication only between character and TileMapManager: reserve a tile, unreserve a tile, populate the per-character pointers to TileMapLayer and AStarGrid2D
+	- Character nodes should be able to perform all their logic in a self-contained manner, without deferring some of it to a parent "manager" node
+	- If they need data to execute that logic, such as information about the tilemap or pathfinding data structures, they should request a copy or a pointer from their parent **only**
 
 Assets:
 

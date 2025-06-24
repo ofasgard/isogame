@@ -4,6 +4,10 @@ use godot::classes::RayCast2D;
 
 use crate::util::IsometricFacing;
 
+pub trait Character {}
+
+/*
+
 pub trait Character {
 	fn get_destination(&self) -> Option<Vector2>;
 	fn get_position(&self) -> Vector2;
@@ -74,3 +78,5 @@ pub trait Character {
 		}
 	}
 }
+
+*/

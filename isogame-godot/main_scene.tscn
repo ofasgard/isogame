@@ -85,7 +85,7 @@ tile_map_data = PackedByteArray("AADy/w4AAAACAAMAAADy/w8AAAAAAAAAAADy/xAAAAAAAAE
 tile_set = SubResource("TileSet_gyfs4")
 
 [node name="Player" parent="." instance=ExtResource("2_2c62f")]
-position = Vector2(133, 210)
+position = Vector2(131, 284)
 
 [node name="Barrel" parent="." instance=ExtResource("3_d5x1h")]
 position = Vector2(192, 184)
