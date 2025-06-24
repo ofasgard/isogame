@@ -4,7 +4,8 @@ use godot::classes::RayCast2D;
 
 use crate::util::IsometricFacing;
 
-pub trait Character {}
+pub trait Character {
+}
 
 /*
 

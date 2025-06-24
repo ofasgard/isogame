@@ -7,7 +7,6 @@ use godot::classes::a_star_grid_2d::CellShape;
 use godot::classes::a_star_grid_2d::DiagonalMode;
 use godot::classes::a_star_grid_2d::Heuristic;
 
-use crate::character::Character;
 use crate::player::Player;
 use crate::wolf::Wolf;
 
@@ -16,7 +15,6 @@ use crate::wolf::Wolf;
 struct TileMapManager {
 	tilemap: Option<Gd<TileMapLayer>>,
 	nav: Option<Gd<AStarGrid2D>>,
-	reserved_tiles: Vec<Vector2i>,
 	base: Base<Node2D>
 }
 
@@ -26,7 +24,6 @@ impl INode2D for TileMapManager {
 		Self {
 			tilemap: None,
 			nav: None,
-			reserved_tiles: Vec::new(),
 			base
 		}
 	}
@@ -41,7 +38,7 @@ impl INode2D for TileMapManager {
 		
 		for node in entities.iter_shared() {
 			self.lock_to_grid(&node);
-			//self.register_signals(&node);
+			self.register_signals(&node);
 		}		
 	}
 }
@@ -109,21 +106,49 @@ impl TileMapManager {
 	
 	fn register_player_signals(&mut self, node: Gd<Node>) {
 		let player : Gd<Player> = node.cast();
-		// TODO
+		player.signals().reserve_tile().connect_other(self, Self::on_reserve_tile);
+		player.signals().unreserve_tile().connect_other(self, Self::on_unreserve_tile);
+		player.signals().update_nav().connect_other(self, Self::on_update_nav_player);
 	}
 	
 	fn register_wolf_signals(&mut self, node: Gd<Node>) {
 		let wolf : Gd<Wolf> = node.cast();
-		// TODO
+		wolf.signals().reserve_tile().connect_other(self, Self::on_reserve_tile);
+		wolf.signals().unreserve_tile().connect_other(self, Self::on_unreserve_tile);
+		wolf.signals().update_nav().connect_other(self, Self::on_update_nav_wolf);
+	}
+	
+	fn on_reserve_tile(&mut self, tile: Vector2i) {
+		let nav = self.nav.as_mut().unwrap();
+		nav.set_point_solid(tile);
+	}
+	
+	fn on_unreserve_tile(&mut self, tile: Vector2i) {
+		let nav = self.nav.as_mut().unwrap();
+		nav.set_point_solid_ex(tile).solid(false).done();
+	}
+	
+	fn on_update_nav_player(&mut self, mut instance: Gd<Player>) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		instance.bind_mut().set_tilemap(tilemap.clone());
+		let nav = self.nav.as_mut().unwrap();
+		instance.bind_mut().set_nav(nav.clone());
+	}
+	
+	fn on_update_nav_wolf(&mut self, mut instance: Gd<Wolf>) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		instance.bind_mut().set_tilemap(tilemap.clone());
+		let nav = self.nav.as_mut().unwrap();
+		instance.bind_mut().set_nav(nav.clone());
 	}
 }
 
-fn grid_to_global(tilemap: &TileMapLayer, coords: Vector2i) -> Vector2 {
+pub fn grid_to_global(tilemap: &TileMapLayer, coords: Vector2i) -> Vector2 {
 	let local_coords = tilemap.map_to_local(coords);
 	tilemap.to_global(local_coords)
 }
 
-fn global_to_grid(tilemap: &TileMapLayer, coords: Vector2) -> Vector2i {
+pub fn global_to_grid(tilemap: &TileMapLayer, coords: Vector2) -> Vector2i {
 	let local_coords = tilemap.to_local(coords);
 	tilemap.local_to_map(local_coords)
 }

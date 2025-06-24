@@ -7,7 +7,6 @@ use godot::classes::RayCast2D;
 use godot::classes::TileMapLayer;
 use godot::classes::AStarGrid2D;
 
-use crate::character::Character;
 use crate::util::IsometricFacing;
 
 #[derive(GodotClass)]
@@ -53,6 +52,17 @@ impl ICharacterBody2D for Wolf {
 		// Add to the entities group.
 		self.base_mut().add_to_group("entities");
 	}
+	
+	fn physics_process(&mut self, delta: f64) {
+		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+		
+		// TODO
+	}
+}
+
+impl Wolf {
+	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
+	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
 }
 
 /*
