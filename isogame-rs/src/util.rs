@@ -1,4 +1,5 @@
 use godot::builtin::Vector2;
+use godot::builtin::Vector2i;
 use godot::classes::Input;
 
 /// Tracks the different keyboard inputs registered with the game.
@@ -81,4 +82,12 @@ impl IsometricFacing {
 		// We only want to move half a tile in the X axis, and half a tile in the Y axis.
 		vector * (tile_width / 2.0)		
 	}
+}
+
+/// Represents the result of an attempt to find a path to a target node or tile.
+
+pub enum PathfindingResult {
+	NoPath,
+	ReachedTarget(Vector2i),	// Tile containing the target
+	FoundPath(Vector2i),		// Next tile on the path
 }

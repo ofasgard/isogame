@@ -36,7 +36,7 @@ impl Player {
 impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
-			speed: 3.0,
+			speed: 2.5,
 			facing: IsometricFacing::SW,
 			destination: None,
 			tilemap: None,
