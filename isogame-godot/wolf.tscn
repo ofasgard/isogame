@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=3 uid="uid://c0ea5j37ylxnc"]
+[gd_scene load_steps=53 format=3 uid="uid://c0ea5j37ylxnc"]
 
 [ext_resource type="Texture2D" uid="uid://deaxwb4bafxhh" path="res://wolf/wolf-idle.png" id="1_fv4gx"]
 [ext_resource type="Texture2D" uid="uid://cdnoxvdd6152o" path="res://wolf/wolf-run.png" id="2_6trwa"]
@@ -382,6 +382,9 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_6trwa"]
+radius = 128.0
+
 [node name="Wolf" type="Wolf"]
 y_sort_enabled = true
 
@@ -393,3 +396,9 @@ offset = Vector2(0, -10)
 [node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="."]
 position = Vector2(0, -3)
 polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
+
+[node name="SearchRadius" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SearchRadius"]
+shape = SubResource("CircleShape2D_6trwa")
