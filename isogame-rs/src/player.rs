@@ -19,7 +19,8 @@ pub struct Player {
 	pub destination: Option<Vector2>,
 	pub tilemap: Option<Gd<TileMapLayer>>,
 	pub nav: Option<Gd<AStarGrid2D>>,
-	pub state: PlayerMovementState,
+	pub movement_state: PlayerMovementState,
+	pub animation_state: PlayerAnimationState,
 	base: Base<CharacterBody2D>
 }
 
@@ -42,7 +43,8 @@ impl ICharacterBody2D for Player {
 			destination: None,
 			tilemap: None,
 			nav: None,
-			state: PlayerMovementState::Idle,
+			movement_state: PlayerMovementState::Idle,
+			animation_state: PlayerAnimationState::Idle,
 			base
 		}
 	}
@@ -65,45 +67,52 @@ impl ICharacterBody2D for Player {
 			return;
 		}
 	
-		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+		
 		
 		// Input logic.
 		if let Some(facing) = KeyboardInput::get_movement() {
-			if let PlayerMovementState::Idle = &self.state {
+			if let PlayerMovementState::Idle = &self.movement_state {
 				// Update facing.
 				self.facing = facing;
 				// Update state.
-				self.state = PlayerMovementState::StartMoving;
+				self.movement_state = PlayerMovementState::StartMoving;
+				self.animation_state = PlayerAnimationState::Walking;
 			}
 		}
 		
-		// State process logic.
-		match &self.state {
+		// Movement logic.
+		match &self.movement_state {
 			PlayerMovementState::Idle => {
-				// Play the idle animation.
-				sprite.set_animation(&self.facing.get_idle_animation());
 				// Reserve the current tile.
 				self.reserve_current_tile();
 			},
 			PlayerMovementState::StartMoving => {
-				sprite.set_animation(&self.facing.get_walk_animation());
 				if self.try_moving() {
-					self.state = PlayerMovementState::Moving;
+					self.movement_state = PlayerMovementState::Moving;
+					self.animation_state = PlayerAnimationState::Walking;
 				} else {
-					self.state = PlayerMovementState::Idle;
+					self.movement_state = PlayerMovementState::Idle;
+					self.animation_state = PlayerAnimationState::Idle;
 				}
 			},
 			PlayerMovementState::Moving => {
-				// Play the walking animation.
-				sprite.set_animation(&self.facing.get_walk_animation());
 				// Keep moving.
 				if !self.keep_moving(delta) {
 					// If we're done moving, change to the idle state.
-					self.state = PlayerMovementState::Idle;
+					self.movement_state = PlayerMovementState::Idle;
+					self.animation_state = PlayerAnimationState::Idle;
 					
 				};
 			}
 		};
+		
+		// Animation logic.
+		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+		
+		match &self.animation_state {
+			PlayerAnimationState::Idle => sprite.set_animation(&self.facing.get_idle_animation()),
+			PlayerAnimationState::Walking => sprite.set_animation(&self.facing.get_walk_animation())
+		}
 	}
 }
 
@@ -208,4 +217,9 @@ pub enum PlayerMovementState {
 	Idle,
 	StartMoving,
 	Moving
+}
+
+pub enum PlayerAnimationState {
+	Idle,
+	Walking
 }

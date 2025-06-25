@@ -2,7 +2,7 @@
 
 A WIP experimental isometric 2D game for learning purposes.
 
-- Reimplement Player and Wolf as a state machine
+- Reimplement Player and Wolf as a state machine with movement and animation states
 - Polish entity collision to fix the ability to "shove" the wolf shortly after it finishes moving
 
 Assets:
