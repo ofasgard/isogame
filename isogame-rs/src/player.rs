@@ -97,11 +97,11 @@ impl ICharacterBody2D for Player {
 				// Play the walking animation.
 				sprite.set_animation(&self.facing.get_walk_animation());
 				// Keep moving.
-				self.keep_moving(delta);
-				// If we're done moving, update state to idle.
-				if self.destination.is_none() {
+				if !self.keep_moving(delta) {
+					// If we're done moving, change to the idle state.
 					self.state = PlayerMovementState::Idle;
-				}
+					
+				};
 			}
 		};
 	}
@@ -145,7 +145,7 @@ impl Player {
 		destination
 	}
 	
-	/// Check for collision in the direction you're currently facing. If you're allowed to move, move.
+	/// Check for collision in the direction you're currently facing. If you're allowed to move, move and return true.
 	fn try_moving(&mut self) -> bool {
 		if !self.has_nav() { return false; }
 		
@@ -174,8 +174,8 @@ impl Player {
 		true
 	}
 	
-	/// Continue moving towards our current destination.
-	fn keep_moving(&mut self, delta: f64) {
+	/// Continue moving towards our current destination. Returns true if there's still more movement left to do.
+	fn keep_moving(&mut self, delta: f64) -> bool {
 		let destination = self.destination.unwrap();
 		
 		// Update our position.
@@ -195,10 +195,12 @@ impl Player {
 			sig.emit(destination_grid);
 			
 			self.destination = None;
+			self.base_mut().set_position(position);
+			false
+		} else {
+			self.base_mut().set_position(position);
+			true
 		}
-		
-		// Move.
-		self.base_mut().set_position(position);
 	}
 }
 
