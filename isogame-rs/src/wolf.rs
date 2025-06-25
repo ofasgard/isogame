@@ -21,6 +21,8 @@ pub struct Wolf {
 	destination: Option<Vector2>,
 	tilemap: Option<Gd<TileMapLayer>>,
 	nav: Option<Gd<AStarGrid2D>>,
+	pub movement_state: WolfMovementState,
+	pub animation_state: WolfAnimationState,
 	base: Base<CharacterBody2D>
 }
 
@@ -38,11 +40,13 @@ impl Wolf {
 impl ICharacterBody2D for Wolf {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
-			speed: 1.5,
+			speed: 2.0,
 			facing: IsometricFacing::SW,
 			destination: None,
 			tilemap: None,
 			nav: None,
+			movement_state: WolfMovementState::Idle,
+			animation_state: WolfAnimationState::Idle,
 			base
 		}
 	}
@@ -64,34 +68,57 @@ impl ICharacterBody2D for Wolf {
 			sig.emit(&gd);
 			return;
 		}
-	
-		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
-		if self.is_moving() {
-			// If we are moving, set walk animation and keep moving.
-			sprite.set_animation(&self.facing.get_walk_animation());
-			self.keep_moving(delta);
-			return;
-		} 
+		// If we are not moving, try and find a path.
+		if let WolfMovementState::Idle = &self.movement_state {
+			match self.find_path() {
+				PathfindingResult::NoPath => (), // If there is no path, do nothing.
+				PathfindingResult::ReachedTarget(target_tile) => {
+					self.face_tile(target_tile);
+					self.movement_state = WolfMovementState::Idle; // for now, until we implement attacks
+					self.animation_state = WolfAnimationState::Idle; // for now, until we implement attacks
+				},
+				PathfindingResult::FoundPath(next_tile) => {
+					self.face_tile(next_tile);
+					self.movement_state = WolfMovementState::StartMoving;
+					self.animation_state = WolfAnimationState::Walking;
+				}
+				
+			}
+		}
 		
-		// Otherwise, try and find a path and follow it to the nearest target.
-		match self.find_path() {
-			PathfindingResult::NoPath => {
-				// Play the idle animation and reserve the current tile.
+		// Movement logic.
+		match &self.movement_state {
+			WolfMovementState::Idle => {
 				self.reserve_current_tile();
-				sprite.set_animation(&self.facing.get_idle_animation());
 			},
-			PathfindingResult::ReachedTarget(target_tile) => {
-				self.reserve_current_tile();
-				self.face_tile(target_tile);
-				sprite.set_animation(&self.facing.get_idle_animation()); // for now, until we implement attacking
+			WolfMovementState::StartMoving => {
+				if self.try_moving() {
+					self.movement_state = WolfMovementState::Moving;
+					self.animation_state = WolfAnimationState::Walking;
+				} else {
+					self.movement_state = WolfMovementState::Idle;
+					self.animation_state = WolfAnimationState::Idle;
+				}
 			},
-			PathfindingResult::FoundPath(next_tile) => {
-				self.face_tile(next_tile);
-				sprite.set_animation(&self.facing.get_walk_animation());
-				self.try_moving();
+			WolfMovementState::Moving => {
+				// Keep moving.
+				if !self.keep_moving(delta) {
+					// If we're done moving, change to the idle state.
+					self.movement_state = WolfMovementState::Idle;
+					self.animation_state = WolfAnimationState::Idle;
+					
+				};
 			}
 		};
+		
+		// Animation logic.
+		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+		
+		match &self.animation_state {
+			WolfAnimationState::Idle => sprite.set_animation(&self.facing.get_idle_animation()),
+			WolfAnimationState::Walking => sprite.set_animation(&self.facing.get_walk_animation())
+		}
 	}
 }
 
@@ -131,11 +158,6 @@ impl Wolf {
 		let movement_vector =  self.facing.get_movement_vector(32.0);
 		let destination = position + movement_vector;
 		destination
-	}
-	
-	/// Check whether the character is currently moving, i.e. whether they have a destination.
-	fn is_moving(&self) -> bool {
-		self.destination.is_some()
 	}
 	
 	/// Check whether we can find a path to a nearby player. Returns the next tile of the path.
@@ -200,9 +222,9 @@ impl Wolf {
 		};
 	}
 	
-	/// Check for collision in the direction you're currently facing. If you're allowed to move, move.
-	fn try_moving(&mut self) {
-		if !self.has_nav() { return; }
+	/// Check for collision in the direction you're currently facing. If you're allowed to move, move and return true.
+	fn try_moving(&mut self) -> bool {
+		if !self.has_nav() { return false; }
 		
 		// Calculate where we're going, based on our current facing.
 		let destination = self.calculate_movement();
@@ -214,7 +236,7 @@ impl Wolf {
 		// If the destination is occupied, we can't move.
 		let nav = self.nav.as_mut().unwrap();
 		if nav.is_point_solid(destination_grid) {
-			return;
+			return false;
 		}
 		
 		// Otherwise, reserve the tile for movement...
@@ -226,10 +248,11 @@ impl Wolf {
 		
 		// And start moving by updating our destination.
 		self.destination = Some(destination);
+		true
 	}
 	
-	/// Continue moving towards our current destination.
-	fn keep_moving(&mut self, delta: f64) {
+	/// Continue moving towards our current destination. Returns true if there's still more movement left to do.
+	fn keep_moving(&mut self, delta: f64) -> bool {
 		let destination = self.destination.unwrap();
 		
 		// Update our position.
@@ -249,9 +272,22 @@ impl Wolf {
 			sig.emit(destination_grid);
 			
 			self.destination = None;
+			self.base_mut().set_position(position);
+			false
+		} else {
+			self.base_mut().set_position(position);
+			true
 		}
-		
-		// Move.
-		self.base_mut().set_position(position);
 	}
+}
+
+pub enum WolfMovementState {
+	Idle,
+	StartMoving,
+	Moving
+}
+
+pub enum WolfAnimationState {
+	Idle,
+	Walking
 }
