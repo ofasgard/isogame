@@ -14,11 +14,12 @@ use crate::util::IsometricFacing;
 #[class(base=CharacterBody2D)]
 pub struct Player {
 	#[export]
-	speed: f32,
-	facing: IsometricFacing,
-	destination: Option<Vector2>,
-	tilemap: Option<Gd<TileMapLayer>>,
-	nav: Option<Gd<AStarGrid2D>>,
+	pub speed: f32,
+	pub facing: IsometricFacing,
+	pub destination: Option<Vector2>,
+	pub tilemap: Option<Gd<TileMapLayer>>,
+	pub nav: Option<Gd<AStarGrid2D>>,
+	pub state: PlayerMovementState,
 	base: Base<CharacterBody2D>
 }
 
@@ -41,6 +42,7 @@ impl ICharacterBody2D for Player {
 			destination: None,
 			tilemap: None,
 			nav: None,
+			state: PlayerMovementState::Idle,
 			base
 		}
 	}
@@ -65,21 +67,43 @@ impl ICharacterBody2D for Player {
 	
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
-		if self.is_moving() {
-			// If we are moving, set walk animation and keep moving.
-			sprite.set_animation(&self.facing.get_walk_animation());
-			self.keep_moving(delta);
-		} else if let Some(facing) = KeyboardInput::get_movement() {
-			// If we are not moving, check if a movement key is currently pressed.
-			self.facing = facing;
-			sprite.set_animation(&self.facing.get_walk_animation());
-			self.try_moving();
-		} else {
-			// Otherwise, play the idle animation.
-			sprite.set_animation(&self.facing.get_idle_animation());
-			// And reserve the current tile.
-			self.reserve_current_tile();
-		}	
+		// Input logic.
+		if let Some(facing) = KeyboardInput::get_movement() {
+			if let PlayerMovementState::Idle = &self.state {
+				// Update facing.
+				self.facing = facing;
+				// Update state.
+				self.state = PlayerMovementState::StartMoving;
+			}
+		}
+		
+		// State process logic.
+		match &self.state {
+			PlayerMovementState::Idle => {
+				// Play the idle animation.
+				sprite.set_animation(&self.facing.get_idle_animation());
+				// Reserve the current tile.
+				self.reserve_current_tile();
+			},
+			PlayerMovementState::StartMoving => {
+				sprite.set_animation(&self.facing.get_walk_animation());
+				if self.try_moving() {
+					self.state = PlayerMovementState::Moving;
+				} else {
+					self.state = PlayerMovementState::Idle;
+				}
+			},
+			PlayerMovementState::Moving => {
+				// Play the walking animation.
+				sprite.set_animation(&self.facing.get_walk_animation());
+				// Keep moving.
+				self.keep_moving(delta);
+				// If we're done moving, update state to idle.
+				if self.destination.is_none() {
+					self.state = PlayerMovementState::Idle;
+				}
+			}
+		};
 	}
 }
 
@@ -121,14 +145,9 @@ impl Player {
 		destination
 	}
 	
-	/// Check whether the character is currently moving, i.e. whether they have a destination.
-	fn is_moving(&self) -> bool {
-		self.destination.is_some()
-	}
-	
 	/// Check for collision in the direction you're currently facing. If you're allowed to move, move.
-	fn try_moving(&mut self) {
-		if !self.has_nav() { return; }
+	fn try_moving(&mut self) -> bool {
+		if !self.has_nav() { return false; }
 		
 		// Calculate where we're going, based on our current facing.
 		let destination = self.calculate_movement();
@@ -140,7 +159,7 @@ impl Player {
 		// If the destination is occupied, we can't move.
 		let nav = self.nav.as_mut().unwrap();
 		if nav.is_point_solid(destination_grid) {
-			return;
+			return false;
 		}
 		
 		// Otherwise, reserve the tile for movement...
@@ -152,6 +171,7 @@ impl Player {
 		
 		// And start moving by updating our destination.
 		self.destination = Some(destination);
+		true
 	}
 	
 	/// Continue moving towards our current destination.
@@ -180,4 +200,10 @@ impl Player {
 		// Move.
 		self.base_mut().set_position(position);
 	}
+}
+
+pub enum PlayerMovementState {
+	Idle,
+	StartMoving,
+	Moving
 }
