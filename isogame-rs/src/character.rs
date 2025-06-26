@@ -78,4 +78,17 @@ impl MovingCharacter {
 		}
 		position
 	}
+	
+	/// Update your facing to move into the specified adjacent tile.
+	pub fn face_tile(&mut self, position: Vector2, tile: Vector2i) {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		
+		let tilepos = tilemap_manager::grid_to_global(&tilemap, tile);
+		let movement_vector = tilepos - position;
+		
+		match IsometricFacing::from_movement_vector(movement_vector, 32.0) {
+			Some(facing) => self.facing = facing,
+			None => panic!("Tried to face a non-adjacent or illegal tile!")
+		};
+	}
 }

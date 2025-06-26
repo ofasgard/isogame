@@ -152,9 +152,9 @@ impl TileMapManager {
 	
 	fn on_update_nav_wolf(&mut self, mut instance: Gd<Wolf>) {
 		let tilemap = self.tilemap.as_ref().unwrap();
-		instance.bind_mut().set_tilemap(tilemap.clone());
+		instance.bind_mut().character.set_tilemap(tilemap.clone());
 		let nav = self.nav.as_mut().unwrap();
-		instance.bind_mut().set_nav(nav.clone());
+		instance.bind_mut().character.set_nav(nav.clone());
 	}
 }
 

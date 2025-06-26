@@ -1,15 +1,12 @@
 use godot::prelude::*;
-use godot::builtin::Vector2;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
-use godot::classes::TileMapLayer;
-use godot::classes::AStarGrid2D;
 use godot::classes::Area2D;
 
 use crate::tilemap_manager;
+use crate::character::MovingCharacter;
 use crate::player::Player;
-use crate::util::IsometricFacing;
 use crate::util::PathfindingResult;
 
 #[derive(GodotClass)]
@@ -17,10 +14,7 @@ use crate::util::PathfindingResult;
 pub struct Wolf {
 	#[export]
 	speed: f32,
-	facing: IsometricFacing,
-	destination: Option<Vector2>,
-	tilemap: Option<Gd<TileMapLayer>>,
-	nav: Option<Gd<AStarGrid2D>>,
+	pub character: MovingCharacter,
 	pub movement_state: WolfMovementState,
 	pub animation_state: WolfAnimationState,
 	base: Base<CharacterBody2D>
@@ -41,10 +35,7 @@ impl ICharacterBody2D for Wolf {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
 			speed: 2.0,
-			facing: IsometricFacing::SW,
-			destination: None,
-			tilemap: None,
-			nav: None,
+			character: MovingCharacter::new(),
 			movement_state: WolfMovementState::Idle,
 			animation_state: WolfAnimationState::Idle,
 			base
@@ -61,11 +52,9 @@ impl ICharacterBody2D for Wolf {
 	}
 	
 	fn physics_process(&mut self, delta: f64) {
-		if !self.has_nav() {
+		if !self.character.has_nav() {
 			// If we don't have pathfinding data, request it and wait.
-			let gd = self.to_gd();
-			let mut sig = self.signals().update_nav();
-			sig.emit(&gd);
+			self.ask_for_nav();
 			return;
 		}
 		
@@ -74,12 +63,16 @@ impl ICharacterBody2D for Wolf {
 			match self.find_path() {
 				PathfindingResult::NoPath => (), // If there is no path, do nothing.
 				PathfindingResult::ReachedTarget(target_tile) => {
-					self.face_tile(target_tile);
+					let position = self.base().get_position();
+					self.character.face_tile(position, target_tile);
+					
 					self.movement_state = WolfMovementState::Idle; // for now, until we implement attacks
 					self.animation_state = WolfAnimationState::Idle; // for now, until we implement attacks
 				},
 				PathfindingResult::FoundPath(next_tile) => {
-					self.face_tile(next_tile);
+					let position = self.base().get_position();
+					self.character.face_tile(position, next_tile);
+					
 					self.movement_state = WolfMovementState::StartMoving;
 					self.animation_state = WolfAnimationState::Walking;
 				}
@@ -93,7 +86,12 @@ impl ICharacterBody2D for Wolf {
 				self.reserve_current_tile();
 			},
 			WolfMovementState::StartMoving => {
-				if self.try_moving() {
+				let position = self.base().get_position();
+				if self.character.try_moving(position) {
+					// Unreserve the current tile, and reserve the file we're facing.
+					self.reserve_facing_tile();
+					self.unreserve_current_tile();
+					
 					self.movement_state = WolfMovementState::Moving;
 					self.animation_state = WolfAnimationState::Walking;
 				} else {
@@ -103,12 +101,15 @@ impl ICharacterBody2D for Wolf {
 			},
 			WolfMovementState::Moving => {
 				// Keep moving.
-				if !self.keep_moving(delta) {
+				let position = self.base().get_position();
+				let new_position = self.character.keep_moving(position, self.speed, delta);
+				self.base_mut().set_position(new_position);
+				
+				if let None = self.character.destination {
 					// If we're done moving, change to the idle state.
 					self.movement_state = WolfMovementState::Idle;
 					self.animation_state = WolfAnimationState::Idle;
-					
-				};
+				}
 			}
 		};
 		
@@ -116,25 +117,32 @@ impl ICharacterBody2D for Wolf {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		match &self.animation_state {
-			WolfAnimationState::Idle => sprite.set_animation(&self.facing.get_idle_animation()),
-			WolfAnimationState::Walking => sprite.set_animation(&self.facing.get_walk_animation())
+			WolfAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
+			WolfAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
 		}
 	}
 }
 
 impl Wolf {
-	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
-	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
-	
-	/// Check whether the mob has pathfinding data.
-	fn has_nav(&self) -> bool {
-		self.tilemap.is_some() && self.nav.is_some()
+	fn ask_for_nav(&mut self) {
+		let gd = self.to_gd();
+		let mut sig = self.signals().update_nav();
+		sig.emit(&gd);
+	}
+
+	fn reserve_facing_tile(&mut self) {
+		if !self.character.has_nav() { return; }
+		
+		let gridpos = self.character.calculate_movement_grid(self.base().get_position());
+		
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(gridpos);
 	}
 	
 	fn reserve_current_tile(&mut self) {
-		if !self.has_nav() { return; }
+		if !self.character.has_nav() { return; }
 	
-		let tilemap = self.tilemap.as_ref().unwrap();
+		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
 		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
 		
@@ -143,8 +151,8 @@ impl Wolf {
 	}
 	
 	fn unreserve_current_tile(&mut self) {
-		if !self.has_nav() { return; } 
-		let tilemap = self.tilemap.as_ref().unwrap();
+		if !self.character.has_nav() { return; } 
+		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
 		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
 		
@@ -152,18 +160,10 @@ impl Wolf {
 		sig.emit(gridpos);
 	}
 	
-	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
-	fn calculate_movement(&self) -> Vector2 {
-		let position = self.base().get_position();
-		let movement_vector =  self.facing.get_movement_vector(32.0);
-		let destination = position + movement_vector;
-		destination
-	}
-	
 	/// Check whether we can find a path to a nearby player. Returns the next tile of the path.
 	fn find_path(&mut self) -> PathfindingResult {
-		if !self.has_nav() { return PathfindingResult::NoPath; } 
-		let tilemap = self.tilemap.as_ref().unwrap();
+		if !self.character.has_nav() { return PathfindingResult::NoPath; } 
+		let tilemap = self.character.tilemap.as_ref().unwrap();
 		
 		// Get a list of nearby bodies.
 		let search_radius : Gd<Area2D> = self.base().get_node_as("SearchRadius");
@@ -185,7 +185,7 @@ impl Wolf {
 		let origin_pos = tilemap_manager::global_to_grid(&tilemap, self.base().get_position());
 		let target_pos = tilemap_manager::global_to_grid(&tilemap, target.unwrap().get_position());
 		
-		let tilemap = self.tilemap.as_mut().unwrap();
+		let tilemap = self.character.tilemap.as_mut().unwrap();
 		
 		// Check whether we already reached the target.
 		let wolf_neighbours = tilemap.get_surrounding_cells(origin_pos);
@@ -196,7 +196,7 @@ impl Wolf {
 		// Get the four cells around the target.
 		let target_neighbours = tilemap.get_surrounding_cells(target_pos);
 		
-		let nav = self.nav.as_mut().unwrap();
+		let nav = self.character.nav.as_mut().unwrap();
 		for neighbour in target_neighbours.iter_shared() {
 			// Perform pathfinding.
 			let path = nav.get_id_path(origin_pos, neighbour);
@@ -206,78 +206,6 @@ impl Wolf {
 		
 		// If no valid paths we returned, give up.
 		PathfindingResult::NoPath
-	}
-	
-	/// Update your facing to move into the specified adjacent tile.
-	fn face_tile(&mut self, tile: Vector2i) {
-		let tilemap = self.tilemap.as_ref().unwrap();
-		
-		let pos = self.base().get_position();
-		let tilepos = tilemap_manager::grid_to_global(&tilemap, tile);
-		let movement_vector = tilepos - pos;
-		
-		match IsometricFacing::from_movement_vector(movement_vector, 32.0) {
-			Some(facing) => self.facing = facing,
-			None => panic!("Wolf tried to move in an illegal direction!")
-		};
-	}
-	
-	/// Check for collision in the direction you're currently facing. If you're allowed to move, move and return true.
-	fn try_moving(&mut self) -> bool {
-		if !self.has_nav() { return false; }
-		
-		// Calculate where we're going, based on our current facing.
-		let destination = self.calculate_movement();
-		
-		// Convert to grid coordinates.
-		let tilemap = self.tilemap.as_ref().unwrap();
-		let destination_grid = tilemap_manager::global_to_grid(&tilemap, destination);
-		
-		// If the destination is occupied, we can't move.
-		let nav = self.nav.as_mut().unwrap();
-		if nav.is_point_solid(destination_grid) {
-			return false;
-		}
-		
-		// Otherwise, reserve the tile for movement...
-		let mut sig = self.signals().reserve_tile();
-		sig.emit(destination_grid);
-		
-		// Unreserve our current tile...
-		self.unreserve_current_tile();
-		
-		// And start moving by updating our destination.
-		self.destination = Some(destination);
-		true
-	}
-	
-	/// Continue moving towards our current destination. Returns true if there's still more movement left to do.
-	fn keep_moving(&mut self, delta: f64) -> bool {
-		let destination = self.destination.unwrap();
-		
-		// Update our position.
-		let mut position = self.base().get_position();
-		let velocity = self.facing.get_movement_vector(32.0) * self.speed * (delta as f32);
-		position += velocity;
-		
-		// Check if we have reached our destination.
-		if position.distance_to(destination) < 1.0 {
-			position = destination;
-			
-			// Convert destination to grid coordinates and mark the tile as unreserved.
-			let tilemap = self.tilemap.as_ref().unwrap();
-			let destination_grid = tilemap_manager::global_to_grid(&tilemap, destination);
-			
-			let mut sig = self.signals().unreserve_tile();
-			sig.emit(destination_grid);
-			
-			self.destination = None;
-			self.base_mut().set_position(position);
-			false
-		} else {
-			self.base_mut().set_position(position);
-			true
-		}
 	}
 }
 

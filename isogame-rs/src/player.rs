@@ -97,8 +97,6 @@ impl ICharacterBody2D for Player {
 					// If we're done moving, change to the idle state.
 					self.movement_state = PlayerMovementState::Idle;
 					self.animation_state = PlayerAnimationState::Idle;
-					// Unreserve the current tile, as we're now occupying it.
-					//self.unreserve_current_tile();
 				}
 			}
 		};
