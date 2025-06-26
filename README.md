@@ -2,7 +2,7 @@
 
 A WIP experimental isometric 2D game for learning purposes.
 
-- Fix animation glitches due to constant resetting of animation states to idle
+- Refactor wolf to use composition
 - Polish entity collision to fix the ability to "shove" the wolf shortly after it finishes moving
 
 Assets:

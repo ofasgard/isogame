@@ -1,24 +1,18 @@
 use godot::prelude::*;
-use godot::builtin::Vector2;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
-use godot::classes::TileMapLayer;
-use godot::classes::AStarGrid2D;
 
 use crate::tilemap_manager;
+use crate::character::MovingCharacter;
 use crate::util::KeyboardInput;
-use crate::util::IsometricFacing;
 
 #[derive(GodotClass)]
 #[class(base=CharacterBody2D)]
 pub struct Player {
 	#[export]
-	pub speed: f32,
-	pub facing: IsometricFacing,
-	pub destination: Option<Vector2>,
-	pub tilemap: Option<Gd<TileMapLayer>>,
-	pub nav: Option<Gd<AStarGrid2D>>,
+	speed: f32,
+	pub character: MovingCharacter,
 	pub movement_state: PlayerMovementState,
 	pub animation_state: PlayerAnimationState,
 	base: Base<CharacterBody2D>
@@ -39,10 +33,7 @@ impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
 			speed: 2.5,
-			facing: IsometricFacing::SW,
-			destination: None,
-			tilemap: None,
-			nav: None,
+			character: MovingCharacter::new(),
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
 			base
@@ -59,21 +50,17 @@ impl ICharacterBody2D for Player {
 	}
 	
 	fn physics_process(&mut self, delta: f64) {
-		if !self.has_nav() {
+		if !self.character.has_nav() {
 			// If we don't have pathfinding data, request it and wait.
-			let gd = self.to_gd();
-			let mut sig = self.signals().update_nav();
-			sig.emit(&gd);
+			self.ask_for_nav();
 			return;
 		}
-	
-		
 		
 		// Input logic.
 		if let Some(facing) = KeyboardInput::get_movement() {
 			if let PlayerMovementState::Idle = &self.movement_state {
 				// Update facing.
-				self.facing = facing;
+				self.character.facing = facing;
 				// Update state.
 				self.movement_state = PlayerMovementState::StartMoving;
 				self.animation_state = PlayerAnimationState::Walking;
@@ -87,7 +74,12 @@ impl ICharacterBody2D for Player {
 				self.reserve_current_tile();
 			},
 			PlayerMovementState::StartMoving => {
-				if self.try_moving() {
+				let position = self.base().get_position();
+				if self.character.try_moving(position) {
+					// Unreserve the current tile, and reserve the file we're facing.
+					self.reserve_facing_tile();
+					self.unreserve_current_tile();
+					
 					self.movement_state = PlayerMovementState::Moving;
 					self.animation_state = PlayerAnimationState::Walking;
 				} else {
@@ -97,12 +89,17 @@ impl ICharacterBody2D for Player {
 			},
 			PlayerMovementState::Moving => {
 				// Keep moving.
-				if !self.keep_moving(delta) {
+				let position = self.base().get_position();
+				let new_position = self.character.keep_moving(position, self.speed, delta);
+				self.base_mut().set_position(new_position);
+				
+				if let None = self.character.destination {
 					// If we're done moving, change to the idle state.
 					self.movement_state = PlayerMovementState::Idle;
 					self.animation_state = PlayerAnimationState::Idle;
-					
-				};
+					// Unreserve the current tile, as we're now occupying it.
+					//self.unreserve_current_tile();
+				}
 			}
 		};
 		
@@ -110,25 +107,32 @@ impl ICharacterBody2D for Player {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		match &self.animation_state {
-			PlayerAnimationState::Idle => sprite.set_animation(&self.facing.get_idle_animation()),
-			PlayerAnimationState::Walking => sprite.set_animation(&self.facing.get_walk_animation())
+			PlayerAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
+			PlayerAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
 		}
 	}
 }
 
 impl Player {
-	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
-	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
+	fn ask_for_nav(&mut self) {
+		let gd = self.to_gd();
+		let mut sig = self.signals().update_nav();
+		sig.emit(&gd);
+	}
 
-	/// Check whether the player has pathfinding data.
-	fn has_nav(&self) -> bool {
-		self.tilemap.is_some() && self.nav.is_some()
+	fn reserve_facing_tile(&mut self) {
+		if !self.character.has_nav() { return; }
+		
+		let gridpos = self.character.calculate_movement_grid(self.base().get_position());
+		
+		let mut sig = self.signals().reserve_tile();
+		sig.emit(gridpos);
 	}
 	
 	fn reserve_current_tile(&mut self) {
-		if !self.has_nav() { return; }
+		if !self.character.has_nav() { return; }
 	
-		let tilemap = self.tilemap.as_ref().unwrap();
+		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
 		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
 		
@@ -137,79 +141,13 @@ impl Player {
 	}
 	
 	fn unreserve_current_tile(&mut self) {
-		if !self.has_nav() { return; } 
-		let tilemap = self.tilemap.as_ref().unwrap();
+		if !self.character.has_nav() { return; } 
+		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
 		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
 		
 		let mut sig = self.signals().unreserve_tile();
 		sig.emit(gridpos);
-	}
-	
-	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
-	fn calculate_movement(&self) -> Vector2 {
-		let position = self.base().get_position();
-		let movement_vector =  self.facing.get_movement_vector(32.0);
-		let destination = position + movement_vector;
-		destination
-	}
-	
-	/// Check for collision in the direction you're currently facing. If you're allowed to move, move and return true.
-	fn try_moving(&mut self) -> bool {
-		if !self.has_nav() { return false; }
-		
-		// Calculate where we're going, based on our current facing.
-		let destination = self.calculate_movement();
-		
-		// Convert to grid coordinates.
-		let tilemap = self.tilemap.as_ref().unwrap();
-		let destination_grid = tilemap_manager::global_to_grid(&tilemap, destination);
-		
-		// If the destination is occupied, we can't move.
-		let nav = self.nav.as_mut().unwrap();
-		if nav.is_point_solid(destination_grid) {
-			return false;
-		}
-		
-		// Otherwise, reserve the tile for movement...
-		let mut sig = self.signals().reserve_tile();
-		sig.emit(destination_grid);
-		
-		// Unreserve our current tile...
-		self.unreserve_current_tile();
-		
-		// And start moving by updating our destination.
-		self.destination = Some(destination);
-		true
-	}
-	
-	/// Continue moving towards our current destination. Returns true if there's still more movement left to do.
-	fn keep_moving(&mut self, delta: f64) -> bool {
-		let destination = self.destination.unwrap();
-		
-		// Update our position.
-		let mut position = self.base().get_position();
-		let velocity = self.facing.get_movement_vector(32.0) * self.speed * (delta as f32);
-		position += velocity;
-		
-		// Check if we have reached our destination.
-		if position.distance_to(destination) < 1.0 {
-			position = destination;
-			
-			// Convert destination to grid coordinates and mark the tile as unreserved.
-			let tilemap = self.tilemap.as_ref().unwrap();
-			let destination_grid = tilemap_manager::global_to_grid(&tilemap, destination);
-			
-			let mut sig = self.signals().unreserve_tile();
-			sig.emit(destination_grid);
-			
-			self.destination = None;
-			self.base_mut().set_position(position);
-			false
-		} else {
-			self.base_mut().set_position(position);
-			true
-		}
 	}
 }
 
