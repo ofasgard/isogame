@@ -15,6 +15,7 @@ pub struct Player {
 	pub character: MovingCharacter,
 	pub movement_state: PlayerMovementState,
 	pub animation_state: PlayerAnimationState,
+	pub reservation_state: PlayerReservationState,
 	base: Base<CharacterBody2D>
 }
 
@@ -36,6 +37,7 @@ impl ICharacterBody2D for Player {
 			character: MovingCharacter::new(),
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
+			reservation_state: PlayerReservationState::ReserveLocation,
 			base
 		}
 	}
@@ -69,19 +71,13 @@ impl ICharacterBody2D for Player {
 		
 		// Movement logic.
 		match &self.movement_state {
-			PlayerMovementState::Idle => {
-				// Reserve the current tile.
-				self.reserve_current_tile();
-			},
+			PlayerMovementState::Idle => (),
 			PlayerMovementState::StartMoving => {
 				let position = self.base().get_position();
 				if self.character.try_moving(position) {
-					// Unreserve the current tile, and reserve the file we're facing.
-					self.reserve_facing_tile();
-					self.unreserve_current_tile();
-					
 					self.movement_state = PlayerMovementState::Moving;
 					self.animation_state = PlayerAnimationState::Walking;
+					self.reservation_state = PlayerReservationState::ReserveDestination;
 				} else {
 					self.movement_state = PlayerMovementState::Idle;
 					self.animation_state = PlayerAnimationState::Idle;
@@ -107,6 +103,20 @@ impl ICharacterBody2D for Player {
 		match &self.animation_state {
 			PlayerAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
 			PlayerAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
+		}
+		
+		// Reservation logic.
+		match &self.reservation_state {
+			PlayerReservationState::None => (),
+			PlayerReservationState::ReserveLocation => {
+				self.reserve_current_tile();
+				self.reservation_state = PlayerReservationState::None;
+			},
+			PlayerReservationState::ReserveDestination => {
+				self.reserve_facing_tile();
+				self.unreserve_current_tile();
+				self.reservation_state = PlayerReservationState::None;
+			}
 		}
 	}
 }
@@ -158,4 +168,10 @@ pub enum PlayerMovementState {
 pub enum PlayerAnimationState {
 	Idle,
 	Walking
+}
+
+pub enum PlayerReservationState {
+	None,
+	ReserveLocation,
+	ReserveDestination
 }

@@ -17,6 +17,7 @@ pub struct Wolf {
 	pub character: MovingCharacter,
 	pub movement_state: WolfMovementState,
 	pub animation_state: WolfAnimationState,
+	pub reservation_state: WolfReservationState,
 	base: Base<CharacterBody2D>
 }
 
@@ -38,6 +39,7 @@ impl ICharacterBody2D for Wolf {
 			character: MovingCharacter::new(),
 			movement_state: WolfMovementState::Idle,
 			animation_state: WolfAnimationState::Idle,
+			reservation_state: WolfReservationState::ReserveLocation,
 			base
 		}
 	}
@@ -82,18 +84,13 @@ impl ICharacterBody2D for Wolf {
 		
 		// Movement logic.
 		match &self.movement_state {
-			WolfMovementState::Idle => {
-				self.reserve_current_tile();
-			},
+			WolfMovementState::Idle => (),
 			WolfMovementState::StartMoving => {
 				let position = self.base().get_position();
 				if self.character.try_moving(position) {
-					// Unreserve the current tile, and reserve the file we're facing.
-					self.reserve_facing_tile();
-					self.unreserve_current_tile();
-					
 					self.movement_state = WolfMovementState::Moving;
 					self.animation_state = WolfAnimationState::Walking;
+					self.reservation_state = WolfReservationState::ReserveDestination;
 				} else {
 					self.movement_state = WolfMovementState::Idle;
 					self.animation_state = WolfAnimationState::Idle;
@@ -119,6 +116,20 @@ impl ICharacterBody2D for Wolf {
 		match &self.animation_state {
 			WolfAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
 			WolfAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
+		}
+		
+		// Reservation logic.
+		match &self.reservation_state {
+			WolfReservationState::None => (),
+			WolfReservationState::ReserveLocation => {
+				self.reserve_current_tile();
+				self.reservation_state = WolfReservationState::None;
+			},
+			WolfReservationState::ReserveDestination => {
+				self.reserve_facing_tile();
+				self.unreserve_current_tile();
+				self.reservation_state = WolfReservationState::None;
+			}
 		}
 	}
 }
@@ -218,4 +229,10 @@ pub enum WolfMovementState {
 pub enum WolfAnimationState {
 	Idle,
 	Walking
+}
+
+pub enum WolfReservationState {
+	None,
+	ReserveLocation,
+	ReserveDestination
 }
