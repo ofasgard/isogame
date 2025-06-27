@@ -1,6 +1,7 @@
 use godot::prelude::*;
 
 mod character;
+mod control;
 mod tilemap_manager;
 mod player;
 mod util;

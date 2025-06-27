@@ -1054,7 +1054,8 @@ polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(1.5, 1.5)
 
-[node name="HealthBar" type="ProgressBar" parent="."]
+[node name="HealthBar" type="HealthBar" parent="."]
+visible = false
 z_index = 100
 z_as_relative = false
 offset_left = -11.0
