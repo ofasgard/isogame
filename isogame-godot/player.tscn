@@ -1038,7 +1038,7 @@ motion_mode = 1
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_sh265")
-animation = &"nw_idle"
+animation = &"ne_walk"
 offset = Vector2(0, -13)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
