@@ -831,7 +831,7 @@ y_sort_enabled = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_ykb7g")
-animation = &"ne_bite"
+animation = &"sw_bite"
 offset = Vector2(0, -10)
 
 [node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="."]

@@ -68,8 +68,8 @@ impl ICharacterBody2D for Wolf {
 					let position = self.base().get_position();
 					self.character.face_tile(position, target_tile);
 					
-					self.movement_state = WolfMovementState::Idle; // for now, until we implement attacks
-					self.animation_state = WolfAnimationState::Idle; // for now, until we implement attacks
+					self.movement_state = WolfMovementState::Bite;
+					self.animation_state = WolfAnimationState::Bite;
 				},
 				PathfindingResult::FoundPath(next_tile) => {
 					let position = self.base().get_position();
@@ -107,6 +107,19 @@ impl ICharacterBody2D for Wolf {
 					self.movement_state = WolfMovementState::Idle;
 					self.animation_state = WolfAnimationState::Idle;
 				}
+			},
+			WolfMovementState::Bite => {
+				let sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
+				
+				if sprite.get_animation().contains("bite") && !sprite.is_playing() {
+					// If the animation hasn't started yet (doesn't contain "bite"), we must wait.
+					// If the animation hasn't finished yet (is still playing), we must wait.
+					
+					// TODO apply damage
+					
+					self.movement_state = WolfMovementState::Idle;
+					self.animation_state = WolfAnimationState::Idle;
+				}
 			}
 		};
 		
@@ -114,8 +127,18 @@ impl ICharacterBody2D for Wolf {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		match &self.animation_state {
-			WolfAnimationState::Idle => sprite.set_animation(&self.character.facing.get_animation("idle")),
-			WolfAnimationState::Walking => sprite.set_animation(&self.character.facing.get_animation("walk"))
+			WolfAnimationState::Idle => {
+				sprite.set_animation(&self.character.facing.get_animation("idle"));
+				sprite.play();
+			},
+			WolfAnimationState::Walking => {
+				sprite.set_animation(&self.character.facing.get_animation("walk"));
+				sprite.play();
+			}
+			WolfAnimationState::Bite => {
+				sprite.set_animation(&self.character.facing.get_animation("bite"));
+				sprite.play();
+			}
 		}
 		
 		// Reservation logic.
@@ -223,12 +246,14 @@ impl Wolf {
 pub enum WolfMovementState {
 	Idle,
 	StartMoving,
-	Moving
+	Moving,
+	Bite
 }
 
 pub enum WolfAnimationState {
 	Idle,
-	Walking
+	Walking,
+	Bite
 }
 
 pub enum WolfReservationState {
