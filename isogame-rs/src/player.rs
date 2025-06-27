@@ -162,7 +162,6 @@ impl Player {
 	
 	pub fn damage(&mut self, damage: f32) {
 		self.health -= damage;
-		godot_print!("Player health: {}", self.health);
 	}
 }
 
