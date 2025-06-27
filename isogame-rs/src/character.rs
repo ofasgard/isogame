@@ -31,6 +31,12 @@ impl MovingCharacter {
 		self.tilemap.is_some() && self.nav.is_some()
 	}
 	
+	/// Get the character's current location in grid coordinates.
+	pub fn get_gridpos(&self, position: Vector2) -> Vector2i {
+		let tilemap = self.tilemap.as_ref().unwrap();
+		tilemap_manager::global_to_grid(&tilemap, position)
+	}
+	
 	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
 	pub fn calculate_movement(&self, position: Vector2) -> Vector2 {
 		let movement_vector =  self.facing.get_movement_vector(32.0);
@@ -38,6 +44,7 @@ impl MovingCharacter {
 		destination
 	}
 	
+	/// Get the grid coordinates of the tile in front of you.
 	pub fn calculate_movement_grid(&self, position: Vector2) -> Vector2i {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		let destination = self.calculate_movement(position);

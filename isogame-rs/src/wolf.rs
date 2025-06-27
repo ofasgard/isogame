@@ -119,8 +119,14 @@ impl ICharacterBody2D for Wolf {
 					// If the animation hasn't started yet (doesn't contain "bite"), we must wait.
 					// If the animation hasn't finished yet (is still playing), we must wait.
 					
-					let mut target = self.target.as_mut().unwrap().bind_mut();
-					target.damage(5.0); // hardcoded bite damage
+					let facing_pos = self.character.calculate_movement_grid(self.base().get_position());
+					let target = self.target.as_mut().unwrap();
+					let target_pos = self.character.get_gridpos(target.get_position());
+					
+					if target_pos == facing_pos  {
+						// If the target hasn't moved, we can damage them.
+						target.bind_mut().damage(5.0); // hardcoded bite damage
+					}
 					
 					self.movement_state = WolfMovementState::Idle;
 					self.animation_state = WolfAnimationState::Idle;
