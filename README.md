@@ -3,7 +3,8 @@
 A WIP experimental isometric 2D game for learning purposes.
 
 - Add a check that player has not moved before damaging them!
-- Add a healthbar above the player's head that appears whenever they get damage (show and hide maybe)
+- Make healthbar change color with damage percentage
+- Make healthbar hidden by default, but it shows for 1s after the value changes
 
 Assets:
 

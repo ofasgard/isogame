@@ -2,6 +2,7 @@ use godot::prelude::*;
 use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
+use godot::classes::ProgressBar;
 
 use crate::tilemap_manager;
 use crate::character::MovingCharacter;
@@ -162,6 +163,9 @@ impl Player {
 	
 	pub fn damage(&mut self, damage: f32) {
 		self.health -= damage;
+		
+		let mut healthbar : Gd<ProgressBar> = self.base().get_node_as("HealthBar");
+		healthbar.set_value(self.health as f64);
 	}
 }
 

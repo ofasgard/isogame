@@ -1,4 +1,4 @@
-[gd_scene load_steps=150 format=3 uid="uid://d2qpmlidd3tnc"]
+[gd_scene load_steps=152 format=3 uid="uid://d2qpmlidd3tnc"]
 
 [ext_resource type="Texture2D" uid="uid://cyvoupasd8mh2" path="res://stag/critter_stag_NE_idle.png" id="1_onrkg"]
 [ext_resource type="Texture2D" uid="uid://yulj6c46rocu" path="res://stag/critter_stag_NE_walk.png" id="2_i3pqv"]
@@ -1032,6 +1032,12 @@ animations = [{
 "speed": 16.0
 }]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dw050"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b26j0"]
+bg_color = Color(0, 1, 0, 1)
+
 [node name="Player" type="Player"]
 y_sort_enabled = true
 motion_mode = 1
@@ -1047,3 +1053,15 @@ polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(1.5, 1.5)
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+z_index = 100
+z_as_relative = false
+offset_left = -11.0
+offset_top = -34.0
+offset_right = 12.0
+offset_bottom = -31.0
+theme_override_styles/background = SubResource("StyleBoxFlat_dw050")
+theme_override_styles/fill = SubResource("StyleBoxFlat_b26j0")
+value = 100.0
+show_percentage = false
