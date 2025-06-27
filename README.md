@@ -3,7 +3,6 @@
 A WIP experimental isometric 2D game for learning purposes.
 
 - Add a check that player has not moved before damaging them!
-- Make healthbar change color with damage percentage
 
 Assets:
 
