@@ -13,7 +13,9 @@ use crate::util::PathfindingResult;
 #[class(base=CharacterBody2D)]
 pub struct Wolf {
 	#[export]
-	speed: f32,
+	pub speed: f32,
+	pub _health: f32,
+	pub target: Option<Gd<Player>>,
 	pub character: MovingCharacter,
 	pub movement_state: WolfMovementState,
 	pub animation_state: WolfAnimationState,
@@ -36,6 +38,8 @@ impl ICharacterBody2D for Wolf {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
 			speed: 2.0,
+			_health: 100.0,
+			target: None,
 			character: MovingCharacter::new(),
 			movement_state: WolfMovementState::Idle,
 			animation_state: WolfAnimationState::Idle,
@@ -115,7 +119,8 @@ impl ICharacterBody2D for Wolf {
 					// If the animation hasn't started yet (doesn't contain "bite"), we must wait.
 					// If the animation hasn't finished yet (is still playing), we must wait.
 					
-					// TODO apply damage
+					let mut target = self.target.as_mut().unwrap().bind_mut();
+					target.damage(5.0); // hardcoded bite damage
 					
 					self.movement_state = WolfMovementState::Idle;
 					self.animation_state = WolfAnimationState::Idle;
@@ -204,20 +209,20 @@ impl Wolf {
 		let candidates = search_radius.get_overlapping_bodies();
 		
 		// Search for a player.
-		let mut target : Option<Gd<Player>> = None;
 		for candidate in candidates.iter_shared() {
 			if candidate.get_class().to_string().as_str() == "Player" {
 				let player : Gd<Player> = candidate.cast();
-				target = Some(player);
+				self.target = Some(player);
 			}
 		}
 		
 		// If we didn't find anyone, give up.
-		if target.is_none() { return PathfindingResult::NoPath; }
+		if self.target.is_none() { return PathfindingResult::NoPath; }
+		let target = self.target.as_ref().unwrap();
 
 		// Get the path origin and end.
 		let origin_pos = tilemap_manager::global_to_grid(&tilemap, self.base().get_position());
-		let target_pos = tilemap_manager::global_to_grid(&tilemap, target.unwrap().get_position());
+		let target_pos = tilemap_manager::global_to_grid(&tilemap, target.get_position());
 		
 		let tilemap = self.character.tilemap.as_mut().unwrap();
 		

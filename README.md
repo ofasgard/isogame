@@ -2,8 +2,7 @@
 
 A WIP experimental isometric 2D game for learning purposes.
 
-How to get player for biting logic?
-Maybe need to pass tiles and players as enum variants, i.e. when pathfinding or for state machines
+- Add a check that player has not moved before damaging them!
 
 Assets:
 

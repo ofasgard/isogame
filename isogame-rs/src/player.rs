@@ -11,7 +11,8 @@ use crate::util::KeyboardInput;
 #[class(base=CharacterBody2D)]
 pub struct Player {
 	#[export]
-	speed: f32,
+	pub speed: f32,
+	pub health: f32,
 	pub character: MovingCharacter,
 	pub movement_state: PlayerMovementState,
 	pub animation_state: PlayerAnimationState,
@@ -34,6 +35,7 @@ impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
 			speed: 2.5,
+			health: 100.0,
 			character: MovingCharacter::new(),
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
@@ -156,6 +158,11 @@ impl Player {
 		
 		let mut sig = self.signals().unreserve_tile();
 		sig.emit(gridpos);
+	}
+	
+	pub fn damage(&mut self, damage: f32) {
+		self.health -= damage;
+		godot_print!("Player health: {}", self.health);
 	}
 }
 
