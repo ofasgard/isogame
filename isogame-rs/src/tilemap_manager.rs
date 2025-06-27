@@ -12,7 +12,7 @@ use crate::wolf::Wolf;
 
 #[derive(GodotClass)]
 #[class(base=Node2D)]
-struct TileMapManager {
+pub struct TileMapManager {
 	tilemap: Option<Gd<TileMapLayer>>,
 	nav: Option<Gd<AStarGrid2D>>,
 	base: Base<Node2D>

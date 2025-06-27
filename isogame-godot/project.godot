@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="IsoGame"
-run/main_scene="uid://d272qjg344h42"
+run/main_scene="uid://cuw4wba3cuywb"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
