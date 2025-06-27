@@ -1,6 +1,6 @@
 # isogame
 
-A WIP experimental isometric 2D game for learning purposes.
+A proof-of-concept isometric 2D game intended to teach myself how to write games for Godot entirely in Rust!
 
 Assets:
 
