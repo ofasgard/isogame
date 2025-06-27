@@ -65,8 +65,7 @@ impl IsometricFacing {
 		}		
 	}
 
-	pub fn get_idle_animation(&self) -> String { format!("{}_idle", self.to_string()) }
-	pub fn get_walk_animation(&self) -> String { format!("{}_walk", self.to_string()) }
+	pub fn get_animation(&self, animation: &str) -> String { format!("{}_{}", self.to_string(), animation) }
 
 	/// Get a directional movement vector with a magnitude of 1 isometric tile.
 	pub fn get_movement_vector(&self, tile_width: f32) -> Vector2 {

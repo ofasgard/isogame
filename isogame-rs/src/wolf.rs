@@ -114,8 +114,8 @@ impl ICharacterBody2D for Wolf {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		match &self.animation_state {
-			WolfAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
-			WolfAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
+			WolfAnimationState::Idle => sprite.set_animation(&self.character.facing.get_animation("idle")),
+			WolfAnimationState::Walking => sprite.set_animation(&self.character.facing.get_animation("walk"))
 		}
 		
 		// Reservation logic.

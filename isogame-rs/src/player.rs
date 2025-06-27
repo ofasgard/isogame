@@ -101,8 +101,8 @@ impl ICharacterBody2D for Player {
 		let mut sprite : Gd<AnimatedSprite2D> = self.base().get_node_as("AnimatedSprite2D");
 		
 		match &self.animation_state {
-			PlayerAnimationState::Idle => sprite.set_animation(&self.character.facing.get_idle_animation()),
-			PlayerAnimationState::Walking => sprite.set_animation(&self.character.facing.get_walk_animation())
+			PlayerAnimationState::Idle => sprite.set_animation(&self.character.facing.get_animation("idle")),
+			PlayerAnimationState::Walking => sprite.set_animation(&self.character.facing.get_animation("walk"))
 		}
 		
 		// Reservation logic.
