@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://d272qjg344h42"]
+[gd_scene load_steps=12 format=4 uid="uid://d272qjg344h42"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_x45sy"]
 [ext_resource type="PackedScene" uid="uid://bw143apto6v50" path="res://barrel.tscn" id="3_s0r8t"]
@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://b15m0ktxit6rt" path="res://tavern-tiles/black.png" id="5_2nrx1"]
 [ext_resource type="PackedScene" uid="uid://c0ea5j37ylxnc" path="res://wolf.tscn" id="6_mmscc"]
 [ext_resource type="PackedScene" uid="uid://inqxoqebah62" path="res://level_warp.tscn" id="6_x45sy"]
-[ext_resource type="PackedScene" uid="uid://18ecupu00qod" path="res://corridor_scene.tscn" id="7_rpr6p"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rpr6p"]
 texture = ExtResource("1_x45sy")
@@ -97,16 +96,16 @@ tile_set = SubResource("TileSet_2c62f")
 position = Vector2(208, 227)
 
 [node name="LevelWarp" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
-level = ExtResource("7_rpr6p")
+level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
 position = Vector2(292, 289)
 
 [node name="LevelWarp2" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
-level = ExtResource("7_rpr6p")
+level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
 position = Vector2(260, 305)
 
 [node name="LevelWarp3" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
-level = ExtResource("7_rpr6p")
+level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
 position = Vector2(276, 297)

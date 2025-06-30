@@ -12,7 +12,7 @@ use crate::player::Player;
 #[class(base=Node2D,init)]
 struct LevelScene {
     #[export]
-    level: Option<Gd<PackedScene>>,
+    level: GString,
     
     #[export]
     player: Option<Gd<PackedScene>>,
@@ -28,7 +28,7 @@ struct LevelScene {
 #[godot_api]
 impl INode2D for LevelScene {
 	fn ready(&mut self) {		
-		let packed_level = self.level.as_mut().unwrap().clone();
+		let packed_level : Gd<PackedScene> = load(&self.level);
 		let level = self.load_level(packed_level, self.player_coords);
 		self.current_level = Some(level);
 		
@@ -37,8 +37,9 @@ impl INode2D for LevelScene {
 	
 	fn process(&mut self, _delta: f64) {
 		if self.warp {
-			let packed_level = self.level.as_mut().unwrap().clone();
+			let packed_level : Gd<PackedScene> = load(&self.level);
 			self.change_level(packed_level, self.player_coords);
+			self.register_warp_signals();
 			self.warp = false;
 		}
 	}
@@ -79,9 +80,9 @@ impl LevelScene {
 		}
 	}
 	
-	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: Gd<PackedScene>, coords: Vector2) {
+	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: GString, coords: Vector2) {
 		if body.get_class().to_string().as_str() == "Player" {
-			self.level = Some(level);
+			self.level = level;
 			self.player_coords = coords;
 			self.warp = true;
 		}
@@ -92,7 +93,7 @@ impl LevelScene {
 #[class(base=Area2D,init)]
 pub struct LevelWarp {
 	#[export]
-	level: Option<Gd<PackedScene>>,
+	level: GString,
 	
 	#[export]
 	coords: Vector2,
@@ -103,7 +104,7 @@ pub struct LevelWarp {
 #[godot_api]
 impl LevelWarp {
 	#[signal]
-	fn warp_entered(body: Gd<Node2D>, level: Gd<PackedScene>, coords: Vector2);
+	fn warp_entered(body: Gd<Node2D>, level: GString, coords: Vector2);
 }
 
 #[godot_api]
@@ -116,10 +117,10 @@ impl IArea2D for LevelWarp {
 
 impl LevelWarp {
 	fn on_body_entered(&mut self, body: Gd<Node2D>) {
-		let level = &self.level.clone().unwrap();
+		let level = self.level.clone();
 		let coords = self.coords.clone();
 	
 		let mut sig = self.signals().warp_entered();
-		sig.emit(&body, level, coords);
+		sig.emit(&body, &level, coords);
 	}
 }

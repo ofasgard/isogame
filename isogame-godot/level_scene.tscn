@@ -1,9 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://cuw4wba3cuywb"]
+[gd_scene load_steps=2 format=3 uid="uid://cuw4wba3cuywb"]
 
-[ext_resource type="PackedScene" uid="uid://d272qjg344h42" path="res://indoor_scene.tscn" id="1_187gu"]
 [ext_resource type="PackedScene" uid="uid://d2qpmlidd3tnc" path="res://player.tscn" id="2_3mivm"]
 
 [node name="LevelScene" type="LevelScene"]
-level = ExtResource("1_187gu")
+level = "res://indoor_scene.tscn"
 player = ExtResource("2_3mivm")
 player_coords = Vector2(40, 230)

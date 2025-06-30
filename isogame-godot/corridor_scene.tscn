@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=4 uid="uid://18ecupu00qod"]
+[gd_scene load_steps=10 format=4 uid="uid://18ecupu00qod"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_cqqyd"]
 [ext_resource type="Texture2D" uid="uid://bqm7ifkr3cmod" path="res://tavern-walls/tavern-walls.png" id="2_sfnfu"]
 [ext_resource type="Texture2D" uid="uid://b15m0ktxit6rt" path="res://tavern-tiles/black.png" id="3_22day"]
+[ext_resource type="PackedScene" uid="uid://inqxoqebah62" path="res://level_warp.tscn" id="4_22day"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rfct4"]
 texture = ExtResource("1_cqqyd")
@@ -85,3 +86,13 @@ tile_set = SubResource("TileSet_sfnfu")
 y_sort_enabled = true
 tile_map_data = PackedByteArray("AAD5/wwABAACAAAAAAD6/wwABAACAAAAAAD7/wwABAACAAAAAAD8/wwABAACAAAAAAD9/wwABAACAAAAAAD+/wwABAACAAAAAAD//wwABAACAAAAAAAAAAwABAACAAAAAAABAAwABAACAAAAAAACAAwABAACAAAAAAADAAwABAACAAAAAAAEAAwABAACAAAAAAAFABAABAABAAAAAAAFAA0ABAABAAAAAAAGAA4ABQAAAAAAAAAGAA8ABQAAAAAAAAAEABEABQAAAAAAAAADABEABQAAAAAAAAACABEABQAAAAAAAAABABEABQAAAAAAAAAAABEABQAAAAAAAAD//xEABQAAAAAAAAD+/xEABQAAAAAAAAD9/xEABQAAAAAAAAD8/xEABQAAAAAAAAAGAA0ABQAAAAAAAAAGABAABQAAAAAAAAAGABEABQAAAAAAAAAFABEABQAAAAAAAAAGAAwABQAAAAAAAAD5/w0ABAAAAAAAAAD5/xAABAAAAAAAAAD7/xEABQAAAAAAAAD6/xEABQAAAAAAAAD5/xEABQAAAAAAAAD4/xEABQAAAAAAAAD4/xAABQAAAAAAAAD4/w0ABQAAAAAAAAD3/w4ABQAAAAAAAAD3/w8ABQAAAAAAAAA=")
 tile_set = SubResource("TileSet_n572a")
+
+[node name="LevelWarp" parent="." groups=["warps"] instance=ExtResource("4_22day")]
+level = "res://indoor_scene.tscn"
+coords = Vector2(257, 288)
+position = Vector2(328, 74)
+
+[node name="LevelWarp2" parent="." groups=["warps"] instance=ExtResource("4_22day")]
+level = "res://indoor_scene.tscn"
+coords = Vector2(257, 288)
+position = Vector2(344, 82)
