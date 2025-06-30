@@ -4,7 +4,6 @@ A proof-of-concept isometric 2D game intended to teach myself how to write games
 
 TODO:
 
-- Make player a string instead of a packedscene
 - Add method to update player facing between level transitions
 - Copy important player data between level transitions
 - Store level state between level transitions

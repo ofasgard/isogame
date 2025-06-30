@@ -15,7 +15,7 @@ struct LevelScene {
     level: GString,
     
     #[export]
-    player: Option<Gd<PackedScene>>,
+    player: GString,
     
     #[export]
     player_coords: Vector2,
@@ -29,7 +29,9 @@ struct LevelScene {
 impl INode2D for LevelScene {
 	fn ready(&mut self) {		
 		let packed_level : Gd<PackedScene> = load(&self.level);
-		let level = self.load_level(packed_level, self.player_coords);
+		let packed_player : Gd<PackedScene> = load(&self.player);
+		
+		let level = self.load_level(packed_level, packed_player, self.player_coords);
 		self.current_level = Some(level);
 		
 		self.register_warp_signals();
@@ -38,7 +40,9 @@ impl INode2D for LevelScene {
 	fn process(&mut self, _delta: f64) {
 		if self.warp {
 			let packed_level : Gd<PackedScene> = load(&self.level);
-			self.change_level(packed_level, self.player_coords);
+			let packed_player : Gd<PackedScene> = load(&self.player);
+			
+			self.change_level(packed_level, packed_player, self.player_coords);
 			self.register_warp_signals();
 			self.warp = false;
 		}
@@ -46,12 +50,11 @@ impl INode2D for LevelScene {
 }
 
 impl LevelScene {
-	fn load_level(&mut self, packed_level: Gd<PackedScene>, spawn_point: Vector2) -> Gd<Node> {
+	fn load_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2) -> Gd<Node> {
 		// Create the level.
 		let mut level : Gd<Node> = packed_level.instantiate().unwrap();
 		
 		// Create the player.
-		let packed_player = self.player.as_mut().unwrap();
 		let mut player : Gd<Player> = packed_player.instantiate().unwrap().cast();
 		player.set_position(spawn_point);
 		
@@ -63,11 +66,11 @@ impl LevelScene {
 		level
 	}
 	
-	fn change_level(&mut self, packed_level: Gd<PackedScene>, spawn_point: Vector2) {
+	fn change_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2) {
 		let old_level = self.current_level.as_mut().unwrap();
 		old_level.queue_free();
 
-		let new_level = self.load_level(packed_level, spawn_point);
+		let new_level = self.load_level(packed_level, packed_player, spawn_point);
 		self.current_level = Some(new_level);
 	}
 	
