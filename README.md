@@ -6,6 +6,7 @@ TODO:
 
 - Figure out why the position of the "barrel" has phantom collision when transitioning levels
 - Copy important player data between level transitions
+	- Because it's getting everything in the group, maybe?
 - Store level state between level transitions
 - Implement death for the player
 

@@ -4,6 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://d2qpmlidd3tnc" path="res://player.tscn" id="2_3mivm"]
 
 [node name="LevelScene" type="LevelScene"]
-starting_level = ExtResource("1_187gu")
+level = ExtResource("1_187gu")
 player = ExtResource("2_3mivm")
 player_coords = Vector2(40, 230)

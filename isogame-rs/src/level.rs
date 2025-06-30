@@ -12,7 +12,7 @@ use crate::player::Player;
 #[class(base=Node2D,init)]
 struct LevelScene {
     #[export]
-    starting_level: Option<Gd<PackedScene>>,
+    level: Option<Gd<PackedScene>>,
     
     #[export]
     player: Option<Gd<PackedScene>>,
@@ -21,17 +21,26 @@ struct LevelScene {
     player_coords: Vector2,
     
     current_level: Option<Gd<Node>>,
+    warp: bool,
     base: Base<Node2D>
 }
 
 #[godot_api]
 impl INode2D for LevelScene {
 	fn ready(&mut self) {		
-		let packed_level = self.starting_level.as_mut().unwrap().clone();
+		let packed_level = self.level.as_mut().unwrap().clone();
 		let level = self.load_level(packed_level, self.player_coords);
 		self.current_level = Some(level);
 		
 		self.register_warp_signals();
+	}
+	
+	fn process(&mut self, _delta: f64) {
+		if self.warp {
+			let packed_level = self.level.as_mut().unwrap().clone();
+			self.change_level(packed_level, self.player_coords);
+			self.warp = false;
+		}
 	}
 }
 
@@ -72,7 +81,9 @@ impl LevelScene {
 	
 	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: Gd<PackedScene>, coords: Vector2) {
 		if body.get_class().to_string().as_str() == "Player" {
-			self.change_level(level, coords);
+			self.level = Some(level);
+			self.player_coords = coords;
+			self.warp = true;
 		}
 	}
 }
