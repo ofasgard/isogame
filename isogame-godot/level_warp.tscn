@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://inqxoqebah62"]
+
+[node name="LevelWarp" type="LevelWarp"]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(0, -3)
+polygon = PackedVector2Array(0, -4, 16, 4, 0, 12, -16, 4)

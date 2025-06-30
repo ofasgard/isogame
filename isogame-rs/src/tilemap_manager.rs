@@ -39,7 +39,7 @@ impl INode2D for TileMapManager {
 		for node in entities.iter_shared() {
 			self.lock_to_grid(&node);
 			self.register_signals(&node);
-		}		
+		}
 	}
 }
 

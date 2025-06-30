@@ -1,12 +1,14 @@
-[gd_scene load_steps=11 format=4 uid="uid://d272qjg344h42"]
+[gd_scene load_steps=13 format=4 uid="uid://d272qjg344h42"]
 
 [ext_resource type="Texture2D" uid="uid://0jwjjqmnhmde" path="res://tavern-tiles/tavern-floor.png" id="1_x45sy"]
 [ext_resource type="PackedScene" uid="uid://bw143apto6v50" path="res://barrel.tscn" id="3_s0r8t"]
 [ext_resource type="Texture2D" uid="uid://bqm7ifkr3cmod" path="res://tavern-walls/tavern-walls.png" id="4_kw1sf"]
 [ext_resource type="Texture2D" uid="uid://b15m0ktxit6rt" path="res://tavern-tiles/black.png" id="5_2nrx1"]
 [ext_resource type="PackedScene" uid="uid://c0ea5j37ylxnc" path="res://wolf.tscn" id="6_mmscc"]
+[ext_resource type="PackedScene" uid="uid://inqxoqebah62" path="res://level_warp.tscn" id="6_x45sy"]
+[ext_resource type="PackedScene" uid="uid://18ecupu00qod" path="res://corridor_scene.tscn" id="7_rpr6p"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2c62f"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rpr6p"]
 texture = ExtResource("1_x45sy")
 texture_region_size = Vector2i(32, 16)
 0:0/0 = 0
@@ -30,9 +32,9 @@ texture_region_size = Vector2i(32, 16)
 tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(32, 16)
-sources/0 = SubResource("TileSetAtlasSource_2c62f")
+sources/0 = SubResource("TileSetAtlasSource_rpr6p")
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hq1ik"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_s0r8t"]
 texture = ExtResource("4_kw1sf")
 texture_region_size = Vector2i(64, 16)
 0:0/size_in_atlas = Vector2i(1, 4)
@@ -51,7 +53,7 @@ texture_region_size = Vector2i(64, 16)
 2:0/0/y_sort_origin = -10
 2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, -16, 0, 0, 8, 16, 0)
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_nfk4m"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kw1sf"]
 texture = ExtResource("5_2nrx1")
 texture_region_size = Vector2i(32, 16)
 0:0/0 = 0
@@ -62,8 +64,8 @@ tile_shape = 1
 tile_layout = 4
 tile_size = Vector2i(32, 16)
 physics_layer_0/collision_layer = 1
-sources/4 = SubResource("TileSetAtlasSource_hq1ik")
-sources/5 = SubResource("TileSetAtlasSource_nfk4m")
+sources/4 = SubResource("TileSetAtlasSource_s0r8t")
+sources/5 = SubResource("TileSetAtlasSource_kw1sf")
 tile_proxies/coords_level = [[1, Vector2i(0, 0)], [4, Vector2i(0, 0)], [2, Vector2i(0, 0)], [4, Vector2i(1, 0)], [3, Vector2i(0, 0)], [4, Vector2i(2, 0)]]
 
 [node name="TileMapManager" type="TileMapManager"]
@@ -93,3 +95,8 @@ tile_set = SubResource("TileSet_2c62f")
 
 [node name="Wolf" parent="." instance=ExtResource("6_mmscc")]
 position = Vector2(208, 227)
+
+[node name="LevelWarp" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
+level = ExtResource("7_rpr6p")
+coords = Vector2(288, 80)
+position = Vector2(290, 288)
