@@ -37,7 +37,7 @@ impl Wolf {
 impl ICharacterBody2D for Wolf {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
-			speed: 2.0,
+			speed: 2.75,
 			_health: 100.0,
 			target: None,
 			character: MovingCharacter::new(),

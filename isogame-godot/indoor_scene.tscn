@@ -99,4 +99,14 @@ position = Vector2(208, 227)
 [node name="LevelWarp" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
 level = ExtResource("7_rpr6p")
 coords = Vector2(288, 80)
-position = Vector2(290, 288)
+position = Vector2(292, 289)
+
+[node name="LevelWarp2" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
+level = ExtResource("7_rpr6p")
+coords = Vector2(288, 80)
+position = Vector2(260, 305)
+
+[node name="LevelWarp3" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
+level = ExtResource("7_rpr6p")
+coords = Vector2(288, 80)
+position = Vector2(276, 297)
