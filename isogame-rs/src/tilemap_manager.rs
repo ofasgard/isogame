@@ -13,6 +13,7 @@ use crate::wolf::Wolf;
 #[derive(GodotClass)]
 #[class(base=Node2D)]
 pub struct TileMapManager {
+	pathfinding_update: f64,
 	tilemap: Option<Gd<TileMapLayer>>,
 	nav: Option<Gd<AStarGrid2D>>,
 	base: Base<Node2D>
@@ -22,6 +23,7 @@ pub struct TileMapManager {
 impl INode2D for TileMapManager {
 	fn init(base: Base<Node2D>) -> Self {
 		Self {
+			pathfinding_update: 0.0,
 			tilemap: None,
 			nav: None,
 			base
@@ -39,6 +41,14 @@ impl INode2D for TileMapManager {
 		for node in entities.iter_shared() {
 			self.lock_to_grid(&node);
 			self.register_signals(&node);
+		}
+	}
+	
+	fn process(&mut self, delta: f64) {
+		self.pathfinding_update += delta;
+		if self.pathfinding_update >= 1.0 {
+			self.update_pathfinding();
+			self.pathfinding_update = 0.0;
 		}
 	}
 }
@@ -70,7 +80,6 @@ impl TileMapManager {
 
 		nav.update();
 		self.nav = Some(nav);
-		self.update_pathfinding();
 	}
 	
 	fn update_pathfinding(&mut self) {
@@ -93,7 +102,10 @@ impl TileMapManager {
 			let pos = node.get_position();
 			let tile = global_to_grid(&tilemap, pos);
 			nav.set_point_solid(tile);
-		}	
+		}
+		
+		// TODO register when things disappear, not just when they appear
+		// This would be better handled as some kind of signal emitted by scenery objects when they appear or disappear.
 	}
 	
 	/// Locks an entity's global position to the isometric grid of the tilemap.
