@@ -98,14 +98,17 @@ position = Vector2(208, 227)
 [node name="LevelWarp" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
 level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
+facing = "SW"
 position = Vector2(292, 289)
 
 [node name="LevelWarp2" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
 level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
+facing = "SW"
 position = Vector2(260, 305)
 
 [node name="LevelWarp3" parent="." groups=["warps"] instance=ExtResource("6_x45sy")]
 level = "res://corridor_scene.tscn"
 coords = Vector2(304, 87)
+facing = "SW"
 position = Vector2(276, 297)

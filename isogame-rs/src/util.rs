@@ -1,3 +1,4 @@
+use godot::prelude::*;
 use godot::builtin::Vector2;
 use godot::builtin::Vector2i;
 use godot::classes::Input;
@@ -36,8 +37,10 @@ impl KeyboardInput {
 }
 
 /// Represents one of the four cardinal directions in an isometric grid.
-#[derive(Clone)]
+#[derive(GodotConvert, Var, Export, Clone, Default, Debug)]
+#[godot(via = GString)]
 pub enum IsometricFacing {
+	#[default]
 	NW,
 	NE,
 	SW,

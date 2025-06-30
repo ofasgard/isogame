@@ -4,3 +4,4 @@
 level = "res://indoor_scene.tscn"
 player = "res://player.tscn"
 player_coords = Vector2(40, 230)
+player_facing = "SW"

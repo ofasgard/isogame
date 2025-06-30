@@ -7,6 +7,7 @@ use godot::classes::IArea2D;
 use godot::classes::PackedScene;
 
 use crate::player::Player;
+use crate::util::IsometricFacing;
 
 #[derive(GodotClass)]
 #[class(base=Node2D,init)]
@@ -20,6 +21,9 @@ struct LevelScene {
     #[export]
     player_coords: Vector2,
     
+    #[export]
+    player_facing: IsometricFacing,
+    
     current_level: Option<Gd<Node>>,
     warp: bool,
     base: Base<Node2D>
@@ -31,7 +35,7 @@ impl INode2D for LevelScene {
 		let packed_level : Gd<PackedScene> = load(&self.level);
 		let packed_player : Gd<PackedScene> = load(&self.player);
 		
-		let level = self.load_level(packed_level, packed_player, self.player_coords);
+		let level = self.load_level(packed_level, packed_player, self.player_coords, self.player_facing.clone());
 		self.current_level = Some(level);
 		
 		self.register_warp_signals();
@@ -42,7 +46,7 @@ impl INode2D for LevelScene {
 			let packed_level : Gd<PackedScene> = load(&self.level);
 			let packed_player : Gd<PackedScene> = load(&self.player);
 			
-			self.change_level(packed_level, packed_player, self.player_coords);
+			self.change_level(packed_level, packed_player, self.player_coords, self.player_facing.clone());
 			self.register_warp_signals();
 			self.warp = false;
 		}
@@ -50,13 +54,14 @@ impl INode2D for LevelScene {
 }
 
 impl LevelScene {
-	fn load_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2) -> Gd<Node> {
+	fn load_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2, facing: IsometricFacing) -> Gd<Node> {
 		// Create the level.
 		let mut level : Gd<Node> = packed_level.instantiate().unwrap();
 		
 		// Create the player.
 		let mut player : Gd<Player> = packed_player.instantiate().unwrap().cast();
 		player.set_position(spawn_point);
+		player.bind_mut().character.facing = facing;
 		
 		// Add the player to the level.
 		level.add_child(&player);
@@ -66,11 +71,11 @@ impl LevelScene {
 		level
 	}
 	
-	fn change_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2) {
+	fn change_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2, facing: IsometricFacing) {
 		let old_level = self.current_level.as_mut().unwrap();
 		old_level.queue_free();
 
-		let new_level = self.load_level(packed_level, packed_player, spawn_point);
+		let new_level = self.load_level(packed_level, packed_player, spawn_point, facing);
 		self.current_level = Some(new_level);
 	}
 	
@@ -83,10 +88,11 @@ impl LevelScene {
 		}
 	}
 	
-	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: GString, coords: Vector2) {
+	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: GString, coords: Vector2, facing: GString) {
 		if body.get_class().to_string().as_str() == "Player" {
 			self.level = level;
 			self.player_coords = coords;
+			self.player_facing = IsometricFacing::from_godot(facing);
 			self.warp = true;
 		}
 	}
@@ -100,6 +106,9 @@ pub struct LevelWarp {
 	
 	#[export]
 	coords: Vector2,
+	
+	#[export]
+	facing: IsometricFacing,
 
 	base: Base<Area2D>
 }
@@ -107,7 +116,7 @@ pub struct LevelWarp {
 #[godot_api]
 impl LevelWarp {
 	#[signal]
-	fn warp_entered(body: Gd<Node2D>, level: GString, coords: Vector2);
+	fn warp_entered(body: Gd<Node2D>, level: GString, coords: Vector2, facing: GString);
 }
 
 #[godot_api]
@@ -122,8 +131,9 @@ impl LevelWarp {
 	fn on_body_entered(&mut self, body: Gd<Node2D>) {
 		let level = self.level.clone();
 		let coords = self.coords.clone();
+		let facing = self.facing.clone();
 	
 		let mut sig = self.signals().warp_entered();
-		sig.emit(&body, &level, coords);
+		sig.emit(&body, &level, coords, &facing.to_godot());
 	}
 }
