@@ -33,8 +33,8 @@ impl Player {
 impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
-			data: PlayerData::new(),
-			character: MovingCharacter::new(),
+			data: PlayerData::default(),
+			character: MovingCharacter::default(),
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
 			reservation_state: PlayerReservationState::ReserveLocation,
@@ -174,8 +174,8 @@ pub struct PlayerData {
 	health: f32
 }
 
-impl PlayerData {
-	pub fn new() -> Self {
+impl Default for PlayerData {
+	fn default() -> Self {
 		Self {
 			speed: 2.5,
 			health: 100.0

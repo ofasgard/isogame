@@ -6,6 +6,7 @@ use godot::classes::AStarGrid2D;
 use crate::level;
 use crate::util::IsometricFacing;
 
+#[derive(Default)]
 pub struct MovingCharacter {
 	pub facing: IsometricFacing,
 	pub destination: Option<Vector2>,
@@ -14,15 +15,6 @@ pub struct MovingCharacter {
 }
 
 impl MovingCharacter {
-	pub fn new() -> Self{
-		Self {
-			facing: IsometricFacing::SW,
-			destination: None,
-			tilemap: None,
-			nav: None
-		}
-	}
-
 	pub fn set_tilemap(&mut self, tilemap: Gd<TileMapLayer>) { self.tilemap = Some(tilemap); }
 	pub fn set_nav(&mut self, nav: Gd<AStarGrid2D>) { self.nav = Some(nav); }
 	

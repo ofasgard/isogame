@@ -39,7 +39,7 @@ impl ICharacterBody2D for Wolf {
 			speed: 2.75,
 			_health: 100.0,
 			target: None,
-			character: MovingCharacter::new(),
+			character: MovingCharacter::default(),
 			movement_state: WolfMovementState::Idle,
 			animation_state: WolfAnimationState::Idle,
 			reservation_state: WolfReservationState::ReserveLocation,
