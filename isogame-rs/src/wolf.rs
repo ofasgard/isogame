@@ -14,7 +14,6 @@ use crate::util::PathfindingResult;
 pub struct Wolf {
 	pub speed: f32,
 	pub _health: f32,
-	pub target: Option<Gd<Player>>,
 	pub character: MovingCharacter,
 	pub input_delay: f64,
 	pub movement_state: WolfMovementState,
@@ -39,7 +38,6 @@ impl ICharacterBody2D for Wolf {
 		Self {
 			speed: 2.75,
 			_health: 100.0,
-			target: None,
 			character: MovingCharacter::default(),
 			input_delay: 0.00,
 			movement_state: WolfMovementState::Idle,
@@ -114,16 +112,20 @@ impl ICharacterBody2D for Wolf {
 					// If the animation hasn't finished yet (is still playing), we must wait.
 					
 					let facing_pos = self.character.calculate_movement_grid(self.base().get_position());
-					let target = self.target.as_mut().unwrap();
-					let target_pos = self.character.get_gridpos(target.get_position());
-					
-					if target_pos == facing_pos  {
-						// If the target hasn't moved, we can damage them.
-						target.bind_mut().damage(5.0); // hardcoded bite damage
+					match self.get_target() {
+						Some(mut target) => {
+							let target_pos = self.character.get_gridpos(target.get_position());
+							
+							if target_pos == facing_pos  {
+								// If the target hasn't moved, we can damage them.
+								target.bind_mut().damage(5.0); // hardcoded bite damage
+							}
+							
+							self.movement_state = WolfMovementState::Idle;
+							self.animation_state = WolfAnimationState::Idle;
+						}
+						None => ()
 					}
-					
-					self.movement_state = WolfMovementState::Idle;
-					self.animation_state = WolfAnimationState::Idle;
 				}
 			}
 		};
@@ -228,11 +230,7 @@ impl Wolf {
 		sig.emit(gridpos);
 	}
 	
-	/// Check whether we can find a path to a nearby player. Returns the next tile of the path.
-	fn find_path(&mut self) -> PathfindingResult {
-		if !self.character.has_nav() { return PathfindingResult::NoPath; } 
-		let tilemap = self.character.tilemap.as_ref().unwrap();
-		
+	fn get_target(&mut self) -> Option<Gd<Player>> {
 		// Get a list of nearby bodies.
 		let search_radius : Gd<Area2D> = self.base().get_node_as("SearchRadius");
 		let candidates = search_radius.get_overlapping_bodies();
@@ -241,19 +239,27 @@ impl Wolf {
 		for candidate in candidates.iter_shared() {
 			if candidate.get_class().to_string().as_str() == "Player" {
 				let player : Gd<Player> = candidate.cast();
-				self.target = Some(player);
+				return Some(player);
 			}
 		}
+		None
+	}
+	
+	/// Check whether we can find a path to a nearby player. Returns the next tile of the path.
+	fn find_path(&mut self) -> PathfindingResult {
+		if !self.character.has_nav() { return PathfindingResult::NoPath; } 
 		
-		// If we didn't find anyone, give up.
-		if self.target.is_none() { return PathfindingResult::NoPath; }
-		let target = self.target.as_ref().unwrap();
-
+		// If we can't find a target, give up.
+		let target = match self.get_target() {
+			Some(x) => x,
+			None => return PathfindingResult::NoPath
+		};
+		
 		// Get the path origin and end.
-		let origin_pos = level::global_to_grid(&tilemap, self.base().get_position());
-		let target_pos = level::global_to_grid(&tilemap, target.get_position());
-		
+		let position = self.base().get_position();
 		let tilemap = self.character.tilemap.as_mut().unwrap();
+		let origin_pos = level::global_to_grid(&tilemap, position);
+		let target_pos = level::global_to_grid(&tilemap, target.get_position());
 		
 		// Check whether we already reached the target.
 		let wolf_neighbours = tilemap.get_surrounding_cells(origin_pos);
