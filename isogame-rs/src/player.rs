@@ -140,11 +140,12 @@ impl Player {
 				// Either change facing or move, but not both.
 				if self.character.facing != facing {
 					self.character.facing = facing;
+					self.input_delay = 0.05; // small input delay to prevent accidental movement
 				} else {
 					self.movement_state = PlayerMovementState::StartMoving;
 					self.animation_state = PlayerAnimationState::Walking;
+					self.input_delay = 0.2; // larger input delay when moving
 				}
-				self.input_delay = 0.05;
 			}
 		}
 	}

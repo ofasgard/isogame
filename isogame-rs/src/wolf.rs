@@ -187,11 +187,11 @@ impl Wolf {
 					if self.character.facing == old_facing {
 						self.movement_state = WolfMovementState::StartMoving;
 						self.animation_state = WolfAnimationState::Walking;
+						self.input_delay = 0.2;
 					}
 				}
-				
 			}
-			self.input_delay = 0.05;
+			
 		}
 	}
 
