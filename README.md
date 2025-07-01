@@ -4,6 +4,7 @@ A proof-of-concept isometric 2D game intended to teach myself how to write games
 
 TODO:
 
+- Make animations smoother / less jerky
 - Store level state between level transitions
 	- Get everything in entities group, then save them in a key:value map where key is node name and value is position
 - Improve the update_pathfinding() method

@@ -120,12 +120,13 @@ impl ICharacterBody2D for Wolf {
 								// If the target hasn't moved, we can damage them.
 								target.bind_mut().damage(5.0); // hardcoded bite damage
 							}
-							
-							self.movement_state = WolfMovementState::Idle;
-							self.animation_state = WolfAnimationState::Idle;
 						}
 						None => ()
 					}
+					
+					// Whether or not we damaged our target, we are done biting.
+					self.movement_state = WolfMovementState::Idle;
+					self.animation_state = WolfAnimationState::Idle;
 				}
 			}
 		};
@@ -144,7 +145,7 @@ impl ICharacterBody2D for Wolf {
 			}
 			WolfAnimationState::Bite => {
 				sprite.set_animation(&self.character.facing.get_animation("bite"));
-				sprite.play();
+				if !sprite.is_playing() { sprite.play(); }
 			}
 		}
 		
