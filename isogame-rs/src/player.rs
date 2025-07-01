@@ -83,7 +83,9 @@ impl ICharacterBody2D for Player {
 		
 		// Movement logic.
 		match &self.movement_state {
-			PlayerMovementState::Idle => (),
+			PlayerMovementState::Idle => {
+				if self.input_delay <= 0.0 { self.animation_state = PlayerAnimationState::Idle; }
+			},
 			PlayerMovementState::StartMoving => {
 				let position = self.base().get_position();
 				if self.character.try_moving(position) {
@@ -92,7 +94,6 @@ impl ICharacterBody2D for Player {
 					self.reservation_state = PlayerReservationState::ReserveDestination;
 				} else {
 					self.movement_state = PlayerMovementState::Idle;
-					self.animation_state = PlayerAnimationState::Idle;
 				}
 			},
 			PlayerMovementState::Moving => {
@@ -104,7 +105,6 @@ impl ICharacterBody2D for Player {
 				if let None = self.character.destination {
 					// If we're done moving, change to the idle state.
 					self.movement_state = PlayerMovementState::Idle;
-					self.animation_state = PlayerAnimationState::Idle;
 				}
 			}
 		};

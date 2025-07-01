@@ -80,7 +80,9 @@ impl ICharacterBody2D for Wolf {
 		
 		// Movement logic.
 		match &self.movement_state {
-			WolfMovementState::Idle => (),
+			WolfMovementState::Idle => {
+				if self.input_delay <= 0.0 { self.animation_state = WolfAnimationState::Idle; }
+			},
 			WolfMovementState::StartMoving => {
 				let position = self.base().get_position();
 				if self.character.try_moving(position) {
@@ -89,7 +91,6 @@ impl ICharacterBody2D for Wolf {
 					self.reservation_state = WolfReservationState::ReserveDestination;
 				} else {
 					self.movement_state = WolfMovementState::Idle;
-					self.animation_state = WolfAnimationState::Idle;
 				}
 			},
 			WolfMovementState::Moving => {
@@ -101,7 +102,6 @@ impl ICharacterBody2D for Wolf {
 				if let None = self.character.destination {
 					// If we're done moving, change to the idle state.
 					self.movement_state = WolfMovementState::Idle;
-					self.animation_state = WolfAnimationState::Idle;
 				}
 			},
 			WolfMovementState::Bite => {
@@ -126,7 +126,6 @@ impl ICharacterBody2D for Wolf {
 					
 					// Whether or not we damaged our target, we are done biting.
 					self.movement_state = WolfMovementState::Idle;
-					self.animation_state = WolfAnimationState::Idle;
 				}
 			}
 		};
