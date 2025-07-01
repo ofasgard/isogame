@@ -16,6 +16,7 @@ pub struct Wolf {
 	pub _health: f32,
 	pub target: Option<Gd<Player>>,
 	pub character: MovingCharacter,
+	pub input_delay: f64,
 	pub movement_state: WolfMovementState,
 	pub animation_state: WolfAnimationState,
 	pub reservation_state: WolfReservationState,
@@ -40,6 +41,7 @@ impl ICharacterBody2D for Wolf {
 			_health: 100.0,
 			target: None,
 			character: MovingCharacter::default(),
+			input_delay: 0.00,
 			movement_state: WolfMovementState::Idle,
 			animation_state: WolfAnimationState::Idle,
 			reservation_state: WolfReservationState::ReserveLocation,
@@ -63,31 +65,11 @@ impl ICharacterBody2D for Wolf {
 			return;
 		}
 		
-		// If we are not moving, try and find a path.
-		if let WolfMovementState::Idle = &self.movement_state {
-			match self.find_path() {
-				PathfindingResult::NoPath => (), // If there is no path, do nothing.
-				PathfindingResult::ReachedTarget(target_tile) => {
-					let position = self.base().get_position();
-					self.character.face_tile(position, target_tile);
-					
-					self.movement_state = WolfMovementState::Bite;
-					self.animation_state = WolfAnimationState::Bite;
-				},
-				PathfindingResult::FoundPath(next_tile) => {
-					let position = self.base().get_position();
-					let old_facing = self.character.facing.clone();
-					
-					self.character.face_tile(position, next_tile);
-					
-					// Either change facing or move, but not both.
-					if self.character.facing == old_facing {
-						self.movement_state = WolfMovementState::StartMoving;
-						self.animation_state = WolfAnimationState::Walking;
-					}
-				}
-				
-			}
+		// Pathfinding logic.
+		if self.input_delay > 0.00 {
+			self.input_delay -= delta;
+		} else {
+			self.handle_pathfinding();
 		}
 		
 		// Movement logic.
@@ -173,6 +155,35 @@ impl ICharacterBody2D for Wolf {
 }
 
 impl Wolf {
+	fn handle_pathfinding(&mut self) {
+		if let WolfMovementState::Idle = &self.movement_state {
+			match self.find_path() {
+				PathfindingResult::NoPath => (), // If there is no path, do nothing.
+				PathfindingResult::ReachedTarget(target_tile) => {
+					let position = self.base().get_position();
+					self.character.face_tile(position, target_tile);
+					
+					self.movement_state = WolfMovementState::Bite;
+					self.animation_state = WolfAnimationState::Bite;
+				},
+				PathfindingResult::FoundPath(next_tile) => {
+					let position = self.base().get_position();
+					let old_facing = self.character.facing.clone();
+					
+					self.character.face_tile(position, next_tile);
+					
+					// Either change facing or move, but not both.
+					if self.character.facing == old_facing {
+						self.movement_state = WolfMovementState::StartMoving;
+						self.animation_state = WolfAnimationState::Walking;
+					}
+				}
+				
+			}
+		}
+		self.input_delay = 0.05;
+	}
+
 	fn ask_for_nav(&mut self) {
 		let gd = self.to_gd();
 		let mut sig = self.signals().update_nav();
