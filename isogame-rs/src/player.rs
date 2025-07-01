@@ -3,7 +3,7 @@ use godot::classes::CharacterBody2D;
 use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
 
-use crate::tilemap_manager;
+use crate::level;
 use crate::character::MovingCharacter;
 use crate::control::HealthBar;
 use crate::util::KeyboardInput;
@@ -142,7 +142,7 @@ impl Player {
 	
 		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
-		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		let gridpos = level::global_to_grid(&tilemap, pos);
 		
 		let mut sig = self.signals().reserve_tile();
 		sig.emit(gridpos);
@@ -152,7 +152,7 @@ impl Player {
 		if !self.character.has_nav() { return; } 
 		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
-		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		let gridpos = level::global_to_grid(&tilemap, pos);
 		
 		let mut sig = self.signals().unreserve_tile();
 		sig.emit(gridpos);

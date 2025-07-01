@@ -3,7 +3,7 @@ use godot::builtin::Vector2;
 use godot::classes::TileMapLayer;
 use godot::classes::AStarGrid2D;
 
-use crate::tilemap_manager;
+use crate::level;
 use crate::util::IsometricFacing;
 
 pub struct MovingCharacter {
@@ -34,7 +34,7 @@ impl MovingCharacter {
 	/// Get the character's current location in grid coordinates.
 	pub fn get_gridpos(&self, position: Vector2) -> Vector2i {
 		let tilemap = self.tilemap.as_ref().unwrap();
-		tilemap_manager::global_to_grid(&tilemap, position)
+		level::global_to_grid(&tilemap, position)
 	}
 	
 	/// Calculate the destination coordinates for movement. The destination is always 1 tile in the direction you're facing.
@@ -48,7 +48,7 @@ impl MovingCharacter {
 	pub fn calculate_movement_grid(&self, position: Vector2) -> Vector2i {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		let destination = self.calculate_movement(position);
-		tilemap_manager::global_to_grid(&tilemap, destination)
+		level::global_to_grid(&tilemap, destination)
 	}
 	
 	/// Check for collision in the direction you're currently facing. If you're allowed to move, move and return true.
@@ -90,7 +90,7 @@ impl MovingCharacter {
 	pub fn face_tile(&mut self, position: Vector2, tile: Vector2i) {
 		let tilemap = self.tilemap.as_ref().unwrap();
 		
-		let tilepos = tilemap_manager::grid_to_global(&tilemap, tile);
+		let tilepos = level::grid_to_global(&tilemap, tile);
 		let movement_vector = tilepos - position;
 		
 		match IsometricFacing::from_movement_vector(movement_vector, 32.0) {

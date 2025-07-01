@@ -4,7 +4,7 @@ use godot::classes::ICharacterBody2D;
 use godot::classes::AnimatedSprite2D;
 use godot::classes::Area2D;
 
-use crate::tilemap_manager;
+use crate::level;
 use crate::character::MovingCharacter;
 use crate::player::Player;
 use crate::util::PathfindingResult;
@@ -188,7 +188,7 @@ impl Wolf {
 	
 		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
-		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		let gridpos = level::global_to_grid(&tilemap, pos);
 		
 		let mut sig = self.signals().reserve_tile();
 		sig.emit(gridpos);
@@ -198,7 +198,7 @@ impl Wolf {
 		if !self.character.has_nav() { return; } 
 		let tilemap = self.character.tilemap.as_ref().unwrap();
 		let pos = self.base().get_position();
-		let gridpos = tilemap_manager::global_to_grid(&tilemap, pos);
+		let gridpos = level::global_to_grid(&tilemap, pos);
 		
 		let mut sig = self.signals().unreserve_tile();
 		sig.emit(gridpos);
@@ -226,8 +226,8 @@ impl Wolf {
 		let target = self.target.as_ref().unwrap();
 
 		// Get the path origin and end.
-		let origin_pos = tilemap_manager::global_to_grid(&tilemap, self.base().get_position());
-		let target_pos = tilemap_manager::global_to_grid(&tilemap, target.get_position());
+		let origin_pos = level::global_to_grid(&tilemap, self.base().get_position());
+		let target_pos = level::global_to_grid(&tilemap, target.get_position());
 		
 		let tilemap = self.character.tilemap.as_mut().unwrap();
 		
