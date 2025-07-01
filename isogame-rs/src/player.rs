@@ -61,11 +61,13 @@ impl ICharacterBody2D for Player {
 		// Input logic.
 		if let Some(facing) = KeyboardInput::get_movement() {
 			if let PlayerMovementState::Idle = &self.movement_state {
-				// Update facing.
-				self.character.facing = facing;
-				// Update state.
-				self.movement_state = PlayerMovementState::StartMoving;
-				self.animation_state = PlayerAnimationState::Walking;
+				// Either change facing or move, but not both.
+				if self.character.facing != facing {
+					self.character.facing = facing;
+				} else {
+					self.movement_state = PlayerMovementState::StartMoving;
+					self.animation_state = PlayerAnimationState::Walking;
+				}
 			}
 		}
 		

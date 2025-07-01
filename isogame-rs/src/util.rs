@@ -37,7 +37,7 @@ impl KeyboardInput {
 }
 
 /// Represents one of the four cardinal directions in an isometric grid.
-#[derive(GodotConvert, Var, Export, Clone, Default, Debug)]
+#[derive(GodotConvert, Var, Export, Clone, Default, Debug, PartialEq)]
 #[godot(via = GString)]
 pub enum IsometricFacing {
 	#[default]

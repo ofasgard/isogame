@@ -76,10 +76,15 @@ impl ICharacterBody2D for Wolf {
 				},
 				PathfindingResult::FoundPath(next_tile) => {
 					let position = self.base().get_position();
+					let old_facing = self.character.facing.clone();
+					
 					self.character.face_tile(position, next_tile);
 					
-					self.movement_state = WolfMovementState::StartMoving;
-					self.animation_state = WolfAnimationState::Walking;
+					// Either change facing or move, but not both.
+					if self.character.facing == old_facing {
+						self.movement_state = WolfMovementState::StartMoving;
+						self.animation_state = WolfAnimationState::Walking;
+					}
 				}
 				
 			}
