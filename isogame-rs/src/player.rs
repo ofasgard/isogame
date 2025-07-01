@@ -13,6 +13,7 @@ use crate::util::KeyboardInput;
 pub struct Player {
 	pub data: PlayerData,
 	pub character: MovingCharacter,
+	pub input_delay: f64,
 	pub movement_state: PlayerMovementState,
 	pub animation_state: PlayerAnimationState,
 	pub reservation_state: PlayerReservationState,
@@ -35,6 +36,7 @@ impl ICharacterBody2D for Player {
 		Self {
 			data: PlayerData::default(),
 			character: MovingCharacter::default(),
+			input_delay: 0.00,
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
 			reservation_state: PlayerReservationState::ReserveLocation,
@@ -59,16 +61,10 @@ impl ICharacterBody2D for Player {
 		}
 		
 		// Input logic.
-		if let Some(facing) = KeyboardInput::get_movement() {
-			if let PlayerMovementState::Idle = &self.movement_state {
-				// Either change facing or move, but not both.
-				if self.character.facing != facing {
-					self.character.facing = facing;
-				} else {
-					self.movement_state = PlayerMovementState::StartMoving;
-					self.animation_state = PlayerAnimationState::Walking;
-				}
-			}
+		if self.input_delay > 0.00 {
+			self.input_delay -= delta;
+		} else {
+			self.handle_input();
 		}
 		
 		// Movement logic.
@@ -124,6 +120,21 @@ impl ICharacterBody2D for Player {
 }
 
 impl Player {
+	fn handle_input(&mut self) {
+		if let Some(facing) = KeyboardInput::get_movement() {
+			if let PlayerMovementState::Idle = &self.movement_state {
+				// Either change facing or move, but not both.
+				if self.character.facing != facing {
+					self.character.facing = facing;
+				} else {
+					self.movement_state = PlayerMovementState::StartMoving;
+					self.animation_state = PlayerAnimationState::Walking;
+				}
+			}
+		}
+		self.input_delay = 0.05;
+	}
+
 	fn ask_for_nav(&mut self) {
 		let gd = self.to_gd();
 		let mut sig = self.signals().update_nav();

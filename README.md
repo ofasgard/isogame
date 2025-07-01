@@ -5,9 +5,12 @@ A proof-of-concept isometric 2D game intended to teach myself how to write games
 TODO:
 
 - Store level state between level transitions
+	- Get everything in entities group, then save them in a key:value map where key is node name and value is position
 - Improve the update_pathfinding() method
 - Implement a slightly movement delay so it's possible to turn without moving
 	- Do this by limiting how many times per second we check for input or try to move the wolf
+	- [x] player
+	- [ ] wolf
 - Implement death for the player
 
 Assets:
