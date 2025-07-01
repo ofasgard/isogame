@@ -53,18 +53,20 @@ impl ICharacterBody2D for Player {
 		self.base_mut().add_to_group("entities");
 	}
 	
-	fn physics_process(&mut self, delta: f64) {
-		if !self.character.has_nav() {
-			// If we don't have pathfinding data, request it and wait.
-			self.ask_for_nav();
-			return;
-		}
-		
+	fn process(&mut self, delta: f64) {
 		// Input logic.
 		if self.input_delay > 0.00 {
 			self.input_delay -= delta;
 		} else {
 			self.handle_input();
+		}
+	}
+	
+	fn physics_process(&mut self, delta: f64) {
+		if !self.character.has_nav() {
+			// If we don't have pathfinding data, request it and wait.
+			self.ask_for_nav();
+			return;
 		}
 		
 		// Movement logic.

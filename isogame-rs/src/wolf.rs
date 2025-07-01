@@ -58,7 +58,7 @@ impl ICharacterBody2D for Wolf {
 		self.base_mut().add_to_group("entities");
 	}
 	
-	fn physics_process(&mut self, delta: f64) {
+	fn process(&mut self, delta: f64) {
 		if !self.character.has_nav() {
 			// If we don't have pathfinding data, request it and wait.
 			self.ask_for_nav();
@@ -70,6 +70,14 @@ impl ICharacterBody2D for Wolf {
 			self.input_delay -= delta;
 		} else {
 			self.handle_pathfinding();
+		}
+	}
+	
+	fn physics_process(&mut self, delta: f64) {
+		if !self.character.has_nav() {
+			// If we don't have pathfinding data, request it and wait.
+			self.ask_for_nav();
+			return;
 		}
 		
 		// Movement logic.
