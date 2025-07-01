@@ -144,9 +144,9 @@ impl Player {
 					self.movement_state = PlayerMovementState::StartMoving;
 					self.animation_state = PlayerAnimationState::Walking;
 				}
+				self.input_delay = 0.05;
 			}
 		}
-		self.input_delay = 0.05;
 	}
 
 	fn ask_for_nav(&mut self) {

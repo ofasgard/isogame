@@ -191,8 +191,8 @@ impl Wolf {
 				}
 				
 			}
+			self.input_delay = 0.05;
 		}
-		self.input_delay = 0.05;
 	}
 
 	fn ask_for_nav(&mut self) {
