@@ -4,6 +4,7 @@ use godot::classes::Node2D;
 use godot::classes::INode2D;
 use godot::classes::Area2D;
 use godot::classes::IArea2D;
+use godot::classes::CanvasLayer;
 use godot::classes::PackedScene;
 
 use crate::player::Player;
@@ -65,6 +66,7 @@ impl LevelManager {
 		
 		// Add the player to the level.
 		level.add_child(&player);
+		self.register_death_signal(&player);
 		
 		// Add the level to the scene tree.
 		self.base_mut().add_child(&level);
@@ -100,6 +102,10 @@ impl LevelManager {
 		}
 	}
 	
+	fn register_death_signal(&mut self, player: &Gd<Player>) {
+		player.signals().dead().connect_other(self, Self::on_player_death);
+	}
+	
 	fn on_warp_entered(&mut self, body: Gd<Node2D>, level: GString, coords: Vector2, facing: GString) {
 		if body.get_class().to_string().as_str() == "Player" {
 			self.level = level;
@@ -107,6 +113,11 @@ impl LevelManager {
 			self.player_facing = IsometricFacing::from_godot(facing);
 			self.warp = true;
 		}
+	}
+	
+	fn on_player_death(&mut self) {
+		let mut msg : Gd<CanvasLayer> = self.base().get_node_as("DeathMessage");
+		msg.show();
 	}
 }
 

@@ -28,6 +28,8 @@ impl Player {
 	pub fn unreserve_tile(coords: Vector2i);
 	#[signal]
 	pub fn update_nav(instance: Gd<Player>);
+	#[signal]
+	pub fn dead();
 }
 
 #[godot_api]
@@ -59,6 +61,16 @@ impl ICharacterBody2D for Player {
 			self.input_delay -= delta;
 		} else {
 			self.handle_input();
+		}
+		
+		// Death logic
+		if self.data.health <= 0.00 {
+			self.base_mut().hide();
+			
+			let mut sig = self.signals().dead();
+			sig.emit();
+			
+			self.base_mut().queue_free();
 		}
 	}
 	
