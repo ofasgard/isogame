@@ -73,12 +73,24 @@ impl LevelScene {
 	
 	fn change_level(&mut self, packed_level: Gd<PackedScene>, packed_player: Gd<PackedScene>, spawn_point: Vector2, facing: IsometricFacing) {
 		let old_level = self.current_level.as_mut().unwrap();
+		
+		// Backup player data.
+		let old_player : Gd<Player> = old_level.get_node_as("Player");
+		let player_data = old_player.bind().data.clone();
+		
+		// Delete old level.
 		old_level.queue_free();
 
+		// Create new level.
 		let new_level = self.load_level(packed_level, packed_player, spawn_point, facing);
+		
+		// Restore player data.
+		let mut new_player : Gd<Player> = new_level.get_node_as("Player");
+		new_player.bind_mut().data = player_data;
+		
 		self.current_level = Some(new_level);
 	}
-	
+		
 	fn register_warp_signals(&mut self) {
 		let mut tree = self.base().get_tree().unwrap();
 		let nodes = tree.get_nodes_in_group("warps");

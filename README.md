@@ -4,7 +4,6 @@ A proof-of-concept isometric 2D game intended to teach myself how to write games
 
 TODO:
 
-- Copy important player data between level transitions
 - Store level state between level transitions
 - Improve the update_pathfinding() method
 - Make it possible to turn without moving (turning uses up movement)

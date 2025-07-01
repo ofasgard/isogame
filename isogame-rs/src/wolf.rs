@@ -12,7 +12,6 @@ use crate::util::PathfindingResult;
 #[derive(GodotClass)]
 #[class(base=CharacterBody2D)]
 pub struct Wolf {
-	#[export]
 	pub speed: f32,
 	pub _health: f32,
 	pub target: Option<Gd<Player>>,

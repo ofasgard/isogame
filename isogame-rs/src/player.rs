@@ -11,9 +11,7 @@ use crate::util::KeyboardInput;
 #[derive(GodotClass)]
 #[class(base=CharacterBody2D)]
 pub struct Player {
-	#[export]
-	pub speed: f32,
-	pub health: f32,
+	pub data: PlayerData,
 	pub character: MovingCharacter,
 	pub movement_state: PlayerMovementState,
 	pub animation_state: PlayerAnimationState,
@@ -35,8 +33,7 @@ impl Player {
 impl ICharacterBody2D for Player {
 	fn init(base: Base<CharacterBody2D>) -> Self {
 		Self {
-			speed: 2.5,
-			health: 100.0,
+			data: PlayerData::new(),
 			character: MovingCharacter::new(),
 			movement_state: PlayerMovementState::Idle,
 			animation_state: PlayerAnimationState::Idle,
@@ -89,7 +86,7 @@ impl ICharacterBody2D for Player {
 			PlayerMovementState::Moving => {
 				// Keep moving.
 				let position = self.base().get_position();
-				let new_position = self.character.keep_moving(position, self.speed, delta);
+				let new_position = self.character.keep_moving(position, self.data.speed, delta);
 				self.base_mut().set_position(new_position);
 				
 				if let None = self.character.destination {
@@ -162,10 +159,25 @@ impl Player {
 	}
 	
 	pub fn damage(&mut self, damage: f32) {
-		self.health -= damage;
+		self.data.health -= damage;
 		
 		let mut healthbar : Gd<HealthBar> = self.base().get_node_as("HealthBar");
-		healthbar.bind_mut().update(self.health as f64);
+		healthbar.bind_mut().update(self.data.health as f64);
+	}
+}
+
+#[derive(Clone)]
+pub struct PlayerData {
+	speed: f32,
+	health: f32
+}
+
+impl PlayerData {
+	pub fn new() -> Self {
+		Self {
+			speed: 2.5,
+			health: 100.0
+		}
 	}
 }
 
