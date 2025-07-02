@@ -486,7 +486,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"ne_bite",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -582,7 +582,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"nw_bite",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -678,7 +678,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"se_bite",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -774,7 +774,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"sw_bite",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -831,7 +831,7 @@ y_sort_enabled = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_ykb7g")
-animation = &"sw_bite"
+animation = &"ne_bite"
 offset = Vector2(0, -10)
 
 [node name="CollisionPolygon2D2" type="CollisionPolygon2D" parent="."]

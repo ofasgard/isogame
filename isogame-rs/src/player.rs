@@ -56,6 +56,12 @@ impl ICharacterBody2D for Player {
 	}
 	
 	fn process(&mut self, delta: f64) {
+		if !self.character.has_nav() {
+			// If we don't have pathfinding data, request it and wait.
+			self.ask_for_nav();
+			return;
+		}
+	
 		// Input logic.
 		if self.input_delay > 0.00 {
 			self.input_delay -= delta;

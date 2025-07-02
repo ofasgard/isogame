@@ -136,11 +136,11 @@ impl ICharacterBody2D for Wolf {
 		match &self.animation_state {
 			WolfAnimationState::Idle => {
 				sprite.set_animation(&self.character.facing.get_animation("idle"));
-				sprite.play();
+				if !sprite.is_playing() { sprite.play(); }
 			},
 			WolfAnimationState::Walking => {
 				sprite.set_animation(&self.character.facing.get_animation("walk"));
-				sprite.play();
+				if !sprite.is_playing() { sprite.play(); }
 			}
 			WolfAnimationState::Bite => {
 				sprite.set_animation(&self.character.facing.get_animation("bite"));
