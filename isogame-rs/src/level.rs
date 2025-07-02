@@ -33,6 +33,7 @@ impl INode2D for Level {
 	fn ready(&mut self) {
 		self.initialise_tilemap();
 		self.initialise_pathfinding();
+		self.update_pathfinding();
 		
 		// Initialise all entities within the tilemap.
 		let mut tree = self.base().get_tree().unwrap();
