@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c0ea5j37ylxnc" path="res://wolf.tscn" id="6_mmscc"]
 [ext_resource type="PackedScene" uid="uid://inqxoqebah62" path="res://level_warp.tscn" id="6_x45sy"]
 
-[node name="TileMapManager" type="Level"]
+[node name="Level" type="Level"]
 y_sort_enabled = true
 
 [node name="Background" type="ColorRect" parent="."]

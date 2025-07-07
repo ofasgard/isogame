@@ -4,7 +4,7 @@
 [ext_resource type="TileSet" uid="uid://bueus38qbjdkj" path="res://foreground.tres" id="2_22day"]
 [ext_resource type="PackedScene" uid="uid://inqxoqebah62" path="res://level_warp.tscn" id="4_22day"]
 
-[node name="TileMapManager" type="Level"]
+[node name="Level" type="Level"]
 y_sort_enabled = true
 
 [node name="Background" type="ColorRect" parent="."]
