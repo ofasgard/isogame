@@ -35,3 +35,13 @@ position = Vector2(328, 74)
 level = "res://indoor_scene.tscn"
 coords = Vector2(257, 288)
 position = Vector2(344, 82)
+
+[node name="LevelWarp3" parent="." groups=["warps"] instance=ExtResource("4_22day")]
+level = "res://outdoor_scene.tscn"
+coords = Vector2(147, 71)
+position = Vector2(106, 186)
+
+[node name="LevelWarp4" parent="." groups=["warps"] instance=ExtResource("4_22day")]
+level = "res://outdoor_scene.tscn"
+coords = Vector2(147, 71)
+position = Vector2(122, 194)
